@@ -40,7 +40,7 @@ namespace Utility
 					delete m_pInstance;
 			}
 
-			osg::Vec3Array *GetCircle( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16  );
+			osg::Vec3Array *GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16  );
 
 			inline osg::Vec3d calcArcPoint( double  pointAngle, UT_PIVOT_PLANE pivotPlane )
 			{
@@ -55,7 +55,17 @@ namespace Utility
 				}
 			}
 
+			osg::Group *GetCylinder( double R, double L, bool CapEnds = true, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16 );
 
+			void TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translate );
+
+		private:
+
+			osg::Geode* createGeometryQuad( 
+				const osg::Vec3d &p0
+				, const osg::Vec3d &p1
+				, const osg::Vec3d &p2
+				, const osg::Vec3d &p3 );
 		};
 	};
 };
