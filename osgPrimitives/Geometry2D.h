@@ -7,6 +7,12 @@ namespace Utility
 {
 	namespace Geometry2D
 	{
+		typedef enum 
+		{
+			PIVOT_PLANE_XY,
+			PIVOT_PLANE_YZ,
+			PIVOT_PLANE_XZ
+		} UT_PIVOT_PLANE;
 		class GeometryFactory
 		{
 			static Utility::Geometry2D::GeometryFactory *m_pInstance;
@@ -34,7 +40,20 @@ namespace Utility
 					delete m_pInstance;
 			}
 
-			std::string GetName(){ return "Utility::Geometry2D::GeometryFactory"; }
+			osg::Vec3Array *GetCircle( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16  );
+
+			inline osg::Vec3d calcArcPoint( double  pointAngle, UT_PIVOT_PLANE pivotPlane )
+			{
+				switch( pivotPlane )
+				{
+				default:
+					return osg::Vec3d( cos( pointAngle), sin( pointAngle), 0);
+				case PIVOT_PLANE_XZ:
+					return osg::Vec3d( cos( pointAngle), 0, sin( pointAngle ) );
+				case PIVOT_PLANE_YZ:
+					return osg::Vec3d( 0, sin( pointAngle), cos( pointAngle));
+				}
+			}
 
 
 		};
