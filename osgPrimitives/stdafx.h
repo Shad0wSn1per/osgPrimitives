@@ -18,6 +18,7 @@
 #include <osg/PolygonMode>
 #include <osg/TexMat>
 #include <osg/TexGen>
+#include <osg/MatrixTransform>
 
 
 // TODO: Установите здесь ссылки на дополнительные заголовки, требующиеся для программы
