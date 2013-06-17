@@ -19,6 +19,8 @@
 #include <osg/TexMat>
 #include <osg/TexGen>
 #include <osg/MatrixTransform>
+#include "osg/Image"
+#include "osg/ImageStream"
 
 
 // TODO: Установите здесь ссылки на дополнительные заголовки, требующиеся для программы

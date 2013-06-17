@@ -3,8 +3,7 @@
 
 #include "stdafx.h"
 #include "Geometry.h"
-#include "osg/Image"
-#include "osg/ImageStream"
+#include "LoftFactory.h"
 
 using namespace osg;
 using namespace Utility::GeometryFactory;
@@ -17,7 +16,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	ref_ptr< Group > root = new Group;
 	Group  *cyl = Geometry3D::Get().GetCylinder( 5, 30, true );
 	MatrixTransform *mt = new MatrixTransform;
-	Vec3 v1( 0,0,15 );
+	Vec3 v1( 0,10,15 );
 	Vec3 v2( 25,-5,0 );
 
 	cyl->getOrCreateStateSet()->setTextureAttributeAndModes(
@@ -31,7 +30,14 @@ int _tmain(int argc, _TCHAR* argv[])
 	root->addChild( mt );
 	int width = 512;
 	int depth = 50;
-	//root->addChild( GeometryFactory::Get().CreateCylinder( Vec3(), Vec3( 30,0,0 ), 5, false ));
+
+	Loft::Path path;
+	Loft::Shape shape;
+	path.AddPoint( Vec3( 0,0,15 )).AddPoint( Vec3( 25, -5, 0 ) ).AddPoint( Vec3(50, -5, 10 ));
+	
+
+
+
 	viewer.setSceneData( root.get() );
 	viewer.run();
 	return 0;
