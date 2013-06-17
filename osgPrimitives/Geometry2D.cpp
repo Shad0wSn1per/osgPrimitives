@@ -51,7 +51,8 @@ osg::Group *GeometryFactory::GetCylinder( double R, double L, bool CapEnds, UT_P
 
 		if( CapEnds )
 		{
-			ref_ptr<Geode> geo = new Geode;
+			ref_ptr<Geode> geo_b = new Geode;
+			ref_ptr<Geode> geo_t = new Geode;
 			Geometry *bottom = new Geometry;
 			Geometry *top = new Geometry;
 			Vec3d norm;
@@ -66,13 +67,15 @@ osg::Group *GeometryFactory::GetCylinder( double R, double L, bool CapEnds, UT_P
 			case PIVOT_PLANE_XZ:
 				norm = Vec3( 0,0,1);
 			};
-			//(*norms.get())[0] = norm.;
 			bottom->setVertexArray( P1 );
 			bottom->addPrimitiveSet( new DrawArrays( PrimitiveSet::TRIANGLE_FAN, 0, P1->size() ));
-			geo->addDrawable( bottom );
-			basement->addChild( geo.get() );
+			geo_b->addDrawable( bottom );
+			basement->addChild( geo_b.get() );
 
-
+			top->setVertexArray( P2 );
+			top->addPrimitiveSet( new DrawArrays( PrimitiveSet::TRIANGLE_FAN, 0, P2->size() ));
+			geo_t->addDrawable( top );
+			basement->addChild( geo_t );
 		}
 		return basement;
 	}
