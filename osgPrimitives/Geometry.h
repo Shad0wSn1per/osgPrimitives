@@ -6,7 +6,11 @@
 
 namespace Utility
 {
-	typedef enum 
+
+	namespace GeometryFactory
+	{
+		using namespace Utility::GeometryFactory;
+		typedef enum 
 		{
 			PIVOT_PLANE_XY,
 			PIVOT_PLANE_YZ,
@@ -15,48 +19,13 @@ namespace Utility
 
 		} UT_PIVOT_PLANE;
 
-	namespace Geometry3D 
-	{
-		class GeometryFactory: public Singleton< Utility::Geometry3D::GeometryFactory >
+
+		class Geometry2D : public Singleton< Utility::GeometryFactory::Geometry2D >
 		{
-			
-		};
+		public :
+			osg::Vec3Array *GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16  );
 
-	};
-
-	namespace Geometry2D
-	{
-		
-		class GeometryFactory
-		{
-			static Utility::Geometry2D::GeometryFactory *m_pInstance;
-			GeometryFactory(){}
-
-		public:
-
-			static Utility::Geometry2D::GeometryFactory& Get()
-			{
-				if( !m_pInstance )
-					m_pInstance = new GeometryFactory();
-				return *m_pInstance;
-			}
-
-			static GeometryFactory *GetPtr()
-			{
-				if( !m_pInstance )
-					m_pInstance = new GeometryFactory();
-				return m_pInstance;
-			}
-
-			~GeometryFactory()
-			{
-				if( m_pInstance )
-					delete m_pInstance;
-			}
-
-			osg::Vec3Array *GetCircleShapePoints( double radius, Utility::UT_PIVOT_PLANE basePlane = Utility::PIVOT_PLANE_YZ, int numSegments = 16  );
-
-			inline osg::Vec3d calcArcPoint( double  pointAngle, Utility::UT_PIVOT_PLANE pivotPlane )
+			inline osg::Vec3d calcArcPoint( double  pointAngle, UT_PIVOT_PLANE pivotPlane )
 			{
 				switch( pivotPlane )
 				{
@@ -69,9 +38,18 @@ namespace Utility
 				}
 			}
 
-			osg::Group *GetCylinder( double R, double L, bool CapEnds = true, Utility::UT_PIVOT_PLANE basePlane = Utility::PIVOT_PLANE_YZ, int numSegments = 16 );
-
 			void TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translate );
+
+			void GenerateQuadTextureCoordinates( osg::Geometry* geometry, float index, float count );
+
+
+		};
+
+
+		class Geometry3D : public Singleton< Geometry3D >
+		{
+		public:
+			osg::Group *GetCylinder( double R, double L, bool CapEnds = true, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16 );
 
 			osg::Group *CreateCylinder( 
 				const osg::Vec3 &from
@@ -80,11 +58,9 @@ namespace Utility
 				, bool CapEnds = true
 				, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ	, int numSegments = 16 );
 
+			osg::Geode* CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 );
+
 			osg::Geode *DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0) );
-
-		private:
-
-			osg::Geode* createGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 );
 		};
 	};
 };

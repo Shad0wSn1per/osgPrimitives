@@ -1,32 +1,42 @@
+#include <assert.h>
 #pragma once
 
 
 template <class T> class Singleton
 {
-public:
-	static T& Get()
-	{
-		if( !m_pInstance )
-			m_pInstance = new T();
-		return *m_pInstance;
-	}
-
-	static T* GetPtr()
-	{
-		if( !m_pInstance )
-			m_pInstance = new T();
-		return m_pInstance;
-	}
-	~Singleton()
-	{
-		if( m_pInstance )
-			delete m_pInstance;
-	}
 private:
+	Singleton( const Singleton<T> & );
+	Singleton & operator = ( const Singleton<T> & );
+
+protected:
+	static T *ms_singleton;
+
+public:
 	Singleton()
 	{
-		m_pInstance = static_cast<T*>( this );
+		assert( !ms_singleton );
+		ms_singleton = static_cast<T*>( this );
 	}
-	static T* m_pInstance;
+
+	~Singleton()
+	{
+		assert( ms_singleton );
+		ms_singleton = 0;
+	}
+
+	static T & Get()
+	{
+		//assert( ms_singleton );
+		if( !ms_singleton )
+			new T();
+
+		return *ms_singleton;
+	}
+
+	static T * GetPtr()
+	{
+		return ms_singleton;
+	}
 };
-template<class T> T* Singleton<T>::m_pInstance = 0;
+
+template<class T> T* Singleton<T>::ms_singleton = 0;

@@ -1,56 +1,43 @@
 #include "stdafx.h"
 #include "Geometry.h"
 #include "osg/Math"
+#include "osg/BlendFunc"
 
 using namespace osg;
 using namespace Utility;
-//using namespace Utility::Geometry2D;
+using namespace Utility::GeometryFactory;
 
 
-Utility::Geometry2D::GeometryFactory * Utility::Geometry2D::GeometryFactory::m_pInstance = 0;
-//Utility::Geometry3D::GeometryFactory * Utility::Geometry3D::GeometryFactory::m_pInstance = 0;
-
-
-osg::Vec3Array *Geometry2D::GeometryFactory::GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane, int numSegments )
+osg::Vec3Array *Geometry2D::GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane, int numSegments )
 {
 	ref_ptr< Vec3Array > arr = new Vec3Array;
 	for( double i = 0; i <= 2*osg::PI; i += 2*osg::PI / numSegments )
-	{
 		arr->push_back( calcArcPoint( i, basePlane ) * radius );
-	}
 	return arr.release();
 }
 
-osg::Group *Geometry2D::GeometryFactory::GetCylinder( double R, double L, bool CapEnds, UT_PIVOT_PLANE basePlane, int numSegments )
+osg::Group *Geometry3D::GetCylinder( double R, double L, bool CapEnds, UT_PIVOT_PLANE basePlane, int numSegments )
 {
-	Vec3Array *P1 = GetCircleShapePoints( R );
+	Vec3Array *P1 = Geometry2D::Get().GetCircleShapePoints( R );
 	if( P1->size() > 3 )
 	{
 		Group *basement = new Group;
 		
 		
 		Vec3Array *P2 = (Vec3Array*)P1->clone( CopyOp::DEEP_COPY_ARRAYS );
-		TranslatePoints( P2, Vec3( L, 0, 0 ));
+		Geometry2D::Get().TranslatePoints( P2, Vec3( L, 0, 0 ));
 		ref_ptr< Vec3Array > quad_points = new Vec3Array;
 		
 		int total_points = P1->size();
 		for( int i =0; i < total_points-1; ++i  )
 		{
-			Geode *geo = createGeometryQuad( P1->at( i ), P1->at( i+1 ), P2->at( i+1 ), P2->at( i ) );
+			Geode *geo = CreateGeometryQuad( P1->at( i ), P1->at( i+1 ), P2->at( i+1 ), P2->at( i ) );
+			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), i, total_points );
 			basement->addChild( geo );
-			/*ref_ptr< Geode> geo = new Geode;
-			ref_ptr< Geometry > quad = new Geometry;
-			quad_points->push_back( P1->at( i ) );
-			quad_points->push_back( P1->at( i+1 ) );
-			quad_points->push_back( P2->at( i+1 ) );
-			quad_points->push_back( P2->at( i ) );
-			quad->setVertexArray( quad_points );
-			quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS,i*4,4));
-			geo->addDrawable( quad.get() );
-			basement->addChild( geo.get() );*/
 		}
-
-		basement->addChild( createGeometryQuad( P1->at( total_points-1 ), P1->at( 0 ), P2->at( 0 ), P2->at( total_points-1 ) ) );
+		Geode *last = CreateGeometryQuad( P1->at( total_points-1 ), P1->at( 0 ), P2->at( 0 ), P2->at( total_points-1 ) );
+		Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)last->getDrawable(0), total_points-1 , total_points );
+		basement->addChild( last );
 
 		if( CapEnds )
 		{
@@ -88,13 +75,13 @@ osg::Group *Geometry2D::GeometryFactory::GetCylinder( double R, double L, bool C
 	return nullptr;
 }
 
-void Geometry2D::GeometryFactory::TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translate )
+void Geometry2D::TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translate )
 {
 	for( size_t i = 0; i < arr->size(); ++i )
 		(*arr)[i] += translate;
 }
 
-osg::Geode* Geometry2D::GeometryFactory::createGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3)
+osg::Geode* Geometry3D::CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 )
 {
 	Geode *geo = new Geode;
 	ref_ptr< Vec3Array > quad_points = new Vec3Array;
@@ -107,15 +94,27 @@ osg::Geode* Geometry2D::GeometryFactory::createGeometryQuad( const osg::Vec3d &p
 	quad->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::QUADS,0,4));
 	geo->addDrawable( quad.get() );
 	geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
-	geo->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
+	geo->getOrCreateStateSet()->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
+	geo->getOrCreateStateSet()->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA ) );
+	//geo->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
 	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(1);
 	(*colors)[0] = Vec4( 1.0,1.0,1.0,1.0);
 	quad->setColorArray(colors.get());
 	quad->setColorBinding(osg::Geometry::BIND_OVERALL);
+
+	osg::ref_ptr<osg::Vec2Array> texcoord = new osg::Vec2Array(4);
+	
+	(*texcoord)[0] = osg::Vec2(0.0f, 0.0f);
+	(*texcoord)[1] = osg::Vec2(0.0f, 1.0f); 
+	(*texcoord)[2] = osg::Vec2(1.0f, 1.0f);
+	(*texcoord)[3] = osg::Vec2(1.0f, 0.0f);
+	quad->setTexCoordArray( 0, texcoord.get() );
+
+
 	return geo;
 }
 
-osg::Group *Geometry2D::GeometryFactory::CreateCylinder( 
+osg::Group *Geometry3D::CreateCylinder( 
 				const osg::Vec3 &from
 				, const osg::Vec3 &to
 				, double Radius
@@ -136,7 +135,7 @@ osg::Group *Geometry2D::GeometryFactory::CreateCylinder(
 	return nullptr;
 }
 
-osg::Geode *Geometry2D::GeometryFactory::DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4f &color )
+osg::Geode *Geometry3D::DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4f &color )
 {
 	Geometry *geom = new Geometry;
 	geom->setUseDisplayList( false );
@@ -158,4 +157,16 @@ osg::Geode *Geometry2D::GeometryFactory::DrawLine( const osg::Vec3 &from	,const 
 	geo->addDrawable( geom );
 	geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
 	return geo;
+}
+
+void Geometry2D::GenerateQuadTextureCoordinates( osg::Geometry* geometry, float index, float count )
+{
+	osg::ref_ptr<osg::Vec2Array> texcoord = new osg::Vec2Array(4);
+	float step = 1. / count;
+	float V = index / count;
+	(*texcoord)[0] = osg::Vec2( 0.0 , V );
+	(*texcoord)[1] = osg::Vec2( 0.0 , V + step ); 
+	(*texcoord)[2] = osg::Vec2( 1.0 , V + step );
+	(*texcoord)[3] = osg::Vec2( 1.0, V );
+	geometry->setTexCoordArray( 0, texcoord.get() );
 }
