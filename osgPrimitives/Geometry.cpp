@@ -96,7 +96,6 @@ osg::Geode* Geometry3D::CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec
 	geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
 	geo->getOrCreateStateSet()->setRenderingHint( osg::StateSet::TRANSPARENT_BIN );
 	geo->getOrCreateStateSet()->setAttributeAndModes( new osg::BlendFunc( osg::BlendFunc::SRC_ALPHA, osg::BlendFunc::ONE_MINUS_SRC_ALPHA ) );
-	//geo->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
 	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(1);
 	(*colors)[0] = Vec4( 1.0,1.0,1.0,1.0);
 	quad->setColorArray(colors.get());
