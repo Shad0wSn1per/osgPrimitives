@@ -83,12 +83,15 @@ copy "$(OutDir)\$(TargetName).pdb" "$(OSG_ROOT)\Bin\$(Configuration)"</Command>
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Geometry2D.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="LoftFactory.h" />
+    <ClInclude Include="Singleton.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Geometry2D.cpp" />
+    <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="LoftFactory.cpp" />
     <ClCompile Include="osgPrimitives.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
