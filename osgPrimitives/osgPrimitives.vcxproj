@@ -83,6 +83,7 @@ copy "$(OutDir)\$(TargetName).pdb" "$(OSG_ROOT)\Bin\$(Configuration)"</Command>
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Enums.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="LoftFactory.h" />
     <ClInclude Include="Singleton.h" />

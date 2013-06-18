@@ -30,6 +30,9 @@
     <ClInclude Include="Geometry.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="Enums.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />

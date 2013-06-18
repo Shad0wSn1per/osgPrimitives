@@ -2,6 +2,7 @@
 #ifndef __OSG_GEOMETRY_2D_H__
 #define __OSG_GEOMETRY_2D_H__
 #include "Singleton.h"
+#include "Enums.h"
 
 
 namespace Utility
@@ -10,20 +11,15 @@ namespace Utility
 	namespace GeometryFactory
 	{
 		using namespace Utility::GeometryFactory;
-		typedef enum 
-		{
-			PIVOT_PLANE_XY,
-			PIVOT_PLANE_YZ,
-			PIVOT_PLANE_XZ,
-			PIVOT_NONE = 0xFF
-
-		} UT_PIVOT_PLANE;
+		
 
 
 		class Geometry2D : public Singleton< Utility::GeometryFactory::Geometry2D >
 		{
 		public :
-			osg::Vec3Array *GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16  );
+			osg::Vec3Array *GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16 );
+
+			osg::Vec3Array *GetArcPoints( double radius,double fromDegree, double toDegree, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int stepDegree = 2 );
 
 			inline osg::Vec3d calcArcPoint( double  pointAngle, UT_PIVOT_PLANE pivotPlane )
 			{
@@ -41,6 +37,8 @@ namespace Utility
 			void TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translate );
 
 			void GenerateQuadTextureCoordinates( osg::Geometry* geometry, float index, float count );
+
+			void TransformPoints( osg::Vec3Array *arr, osg::MatrixTransform *mt );
 
 
 		};

@@ -16,6 +16,21 @@ osg::Vec3Array *Geometry2D::GetCircleShapePoints( double radius, UT_PIVOT_PLANE 
 	return arr.release();
 }
 
+osg::Vec3Array *Geometry2D::GetArcPoints( double radius, double fromDegree, double toDegree, UT_PIVOT_PLANE basePlane, int stepDegree )
+{
+	double F0 = osg::DegreesToRadians( fromDegree );
+	double F1 = osg::DegreesToRadians( toDegree );
+	double STEP = osg::DegreesToRadians( (double)stepDegree );
+	ref_ptr<Vec3Array> arr =  new Vec3Array;
+
+	for( F0; F0 < F1; F0 = F0 + STEP)
+		arr->push_back( calcArcPoint( F0, basePlane )*radius );
+
+	if ( F0 != F1 )
+		arr->push_back( calcArcPoint( F1, basePlane  )*radius );
+	return arr.release();
+}
+
 osg::Group *Geometry3D::GetCylinder( double R, double L, bool CapEnds, UT_PIVOT_PLANE basePlane, int numSegments )
 {
 	Vec3Array *P1 = Geometry2D::Get().GetCircleShapePoints( R );
@@ -79,6 +94,13 @@ void Geometry2D::TranslatePoints( osg::Vec3Array *arr, const osg::Vec3 &translat
 {
 	for( size_t i = 0; i < arr->size(); ++i )
 		(*arr)[i] += translate;
+}
+
+void Geometry2D::TransformPoints( osg::Vec3Array *arr, osg::MatrixTransform *mt )
+{
+	Matrix m = mt->getMatrix();
+	for( size_t i = 0; i < arr->size(); ++i )
+		(*arr)[i] = (*arr)[i]* m;
 }
 
 osg::Geode* Geometry3D::CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 )
