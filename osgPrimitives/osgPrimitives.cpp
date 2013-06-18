@@ -2,8 +2,8 @@
 //
 
 #include "stdafx.h"
-#include "Geometry.h"
-#include "LoftFactory.h"
+#include "../GeometryLib/IProcedural.h"
+#include <Windows.h>
 
 using namespace osg;
 using namespace Utility::GeometryFactory;
@@ -13,40 +13,40 @@ int _tmain(int argc, _TCHAR* argv[])
 	viewer.setUpViewInWindow( 25,25,1024,768 );
 	viewer.getCamera()->setComputeNearFarMode( osg::CullSettings::DO_NOT_COMPUTE_NEAR_FAR );
 	viewer.realize();
-	ref_ptr< Group > root = new Group;
-	//Group  *cyl = Geometry3D::Get().GetCylinder( 5, 30, true );
-	MatrixTransform *mt = new MatrixTransform;
-	Vec3 v1( 0,10,15 );
-	Vec3 v2( 25,-5,0 );
+	typedef bool (__stdcall *GetGeomFactoryInterface)( Utility::GeometryFactory::IFactory** pInterface );
+	typedef void (__stdcall *FreeFactoryInterface)( Utility::GeometryFactory::IFactory* pInterface );
+	GetGeomFactoryInterface getFactoryIFace;
+	FreeFactoryInterface freeInterface;
+	Utility::GeometryFactory::IFactory *factory = 0; 
 
-	/*cyl->getOrCreateStateSet()->setTextureAttributeAndModes(
-		0, new Texture2D( osgDB::readImageFile( "Dirt.jpg" )), StateAttribute::ON );*/
-
-	mt->setMatrix( Matrixd::identity().rotate( Vec3( 1,0,0), v2-v1 )*Matrixd::translate( v1 ) );
-	//mt->addChild( cyl );
-	root->addChild( Geometry3D::Get().DrawLine( Vec3(), Vec3( 100,0,0 ), Vec4( 0,1,0,1)));
-	root->addChild( Geometry3D::Get().DrawLine( Vec3(), Vec3( 0,100,0 ), Vec4( 1,0,0,1)));
-	root->addChild( Geometry3D::Get().DrawLine( Vec3(), Vec3( 0,0,100 ), Vec4( 0,0,1,1)));
-	//root->addChild( mt );
-	int width = 512;
-	int depth = 50;
-
-	Loft::Path path;
-	Loft::Shape shape( Utility::GeometryFactory::PIVOT_PLANE_YZ );
-	shape.SetShape( Geometry2D::Get().GetCircleShapePoints( 10 )).CloseShape( true );
-	path.AddPoint( Vec3( 10,0,0 )).AddPoint( Vec3( 50, 25, 0 ) ).AddPoint( 100, 25, 100 ).AddPoint( 200,50,0).AddPoint( 250, 50, 15 );
-	Loft loft_cyl;
-	Group *cyl_grp = new Group;
-	if( loft_cyl.SetPath( &path ).SetShape( &shape ).Realize( cyl_grp ) )
+	HMODULE hlib = LoadLibrary(L"GeometryLib");
+	if( hlib )
 	{
-		root->addChild( cyl_grp );
-		cyl_grp->getOrCreateStateSet()->setTextureAttributeAndModes(
-		0, new Texture2D( osgDB::readImageFile( "Dirt.jpg" )), StateAttribute::ON );
+		getFactoryIFace = (GetGeomFactoryInterface)::GetProcAddress( hlib, "_GetInterface@4" );
+		freeInterface = ( FreeFactoryInterface )::GetProcAddress( hlib, "_FreeInterface@4" );
+		
+		if( getFactoryIFace )
+			getFactoryIFace( &factory );
 	}
-	
-	
+	if( !factory )
+		return -1;
 
+	ref_ptr< Group > root = new Group;
+	ref_ptr< Group > cyl_grp = new Group;
+	ILoft *loft = factory->Loft();
+	ILoftPath *path = loft->NewPath();
+	ILoftShape *shape = loft->NewShape( PIVOT_PLANE_YZ );
+	path->AddPoint( Vec3( 10,0,0 ))->AddPoint( Vec3( 50, 25, 0 ) )->AddPoint( 100, 25, 100 )->AddPoint( 200,50,0)->AddPoint( 250, 50, 15 );
+	shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( 5 ) )->CloseShape( true );
+	loft->SetPath( path )->SetShape( shape )->Realize( cyl_grp );
+	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 100,0,0 ), Vec4( 0,1,0,1)));
+	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,100,0 ), Vec4( 1,0,0,1)));
+	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,100 ), Vec4( 0,0,1,1)));
+	root->addChild( cyl_grp );
+	cyl_grp->getOrCreateStateSet()->setTextureAttributeAndModes(
+		0, new Texture2D( osgDB::readImageFile( "Dirt.jpg" )), StateAttribute::ON );
 	viewer.setSceneData( root.get() );
 	viewer.run();
+	freeInterface( factory );
 	return 0;
 }

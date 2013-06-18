@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "osgPrimitives", "osgPrimitives\osgPrimitives.vcxproj", "{DC3759F3-E680-4678-86B5-FD1B9FD4D6E8}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GeometryLib", "GeometryLib\GeometryLib.vcxproj", "{8E777B92-0F14-430D-8800-FFD7D0E0066C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{DC3759F3-E680-4678-86B5-FD1B9FD4D6E8}.Debug|Win32.Build.0 = Debug|Win32
 		{DC3759F3-E680-4678-86B5-FD1B9FD4D6E8}.Release|Win32.ActiveCfg = Release|Win32
 		{DC3759F3-E680-4678-86B5-FD1B9FD4D6E8}.Release|Win32.Build.0 = Release|Win32
+		{8E777B92-0F14-430D-8800-FFD7D0E0066C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8E777B92-0F14-430D-8800-FFD7D0E0066C}.Debug|Win32.Build.0 = Debug|Win32
+		{8E777B92-0F14-430D-8800-FFD7D0E0066C}.Release|Win32.ActiveCfg = Release|Win32
+		{8E777B92-0F14-430D-8800-FFD7D0E0066C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

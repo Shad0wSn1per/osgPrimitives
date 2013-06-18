@@ -7,30 +7,12 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="LoftFactory.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Geometry.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Singleton.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="LoftFactory.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Geometry.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Enums.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

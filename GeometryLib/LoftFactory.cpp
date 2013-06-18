@@ -5,14 +5,24 @@
 using namespace osg;
 using namespace Utility::GeometryFactory;
 
-Loft::Path& Loft::Path::AddPoint( const osg::Vec3 &point )
+template< class T >
+ void deleteUsedObject ( T ptr )
+{
+	if( ptr )
+	{
+		delete ptr;
+		ptr = nullptr;
+	}
+}
+
+Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point )
 {
 	if( point.valid() )
 		m_Path.push_back( point );
-	return *this;
+	return this;
 }
 
-Loft::Path& Loft::Path::AddPoint( const float x, const float y,const float z )
+Loft::Path* Loft::Path::AddPoint( const float x, const float y,const float z )
 {
 	return AddPoint( Vec3( x, y, z ) );
 }
@@ -21,11 +31,11 @@ Loft::Path::PATH Loft::Path::Get(){ return m_Path; }
 
 void Loft::Path::Clear(){ m_Path.clear(); }
 
-Loft::Path& Loft::Path::SetPath( const osg::Vec3Array &path )
+Loft::Path* Loft::Path::SetPath( const osg::Vec3Array &path )
 {
 	m_Path.clear();
 	m_Path.assign( path.begin(), path.end());
-	return *this;
+	return this;
 }
 
 Vec3& Loft::Path::operator[]( size_t idx )
@@ -38,43 +48,43 @@ Vec3& Loft::Path::operator[]( size_t idx )
 }
 
 
-Loft::Shape& Loft::Shape::AddPoint( const osg::Vec3 &point )
+Loft::Shape* Loft::Shape::AddPoint( const osg::Vec3 &point )
 {
 	if( point.valid() )
 		m_Shape->push_back( point );
-	return *this;
+	return this;
 }
 
-Loft::Shape& Loft::Shape::AddPoint( const float x, const float y,const float z )
+Loft::Shape* Loft::Shape::AddPoint( const float x, const float y,const float z )
 {
 	return AddPoint( Vec3( x, y, z ));
 }
 
-Loft::Shape& Loft::Shape::CloseShape( bool close )
+Loft::Shape* Loft::Shape::CloseShape( bool close )
 {
 	m_bCloseShape = close;
-	return *this;
+	return this;
 }
 
-Loft::Shape& Loft::Shape::SetShape( Vec3Array *shape )
+Loft::Shape* Loft::Shape::SetShape( Vec3Array *shape )
 {
 	m_Shape = shape;
-	return *this;
+	return this;
 }
 void Loft::Shape::Clear(){ m_Shape->clear(); }
 
 osg::Vec3Array *Loft::Shape::Get(){ return m_Shape; }
 
-Loft& Loft::SetPath( Path *p )
+Loft* Loft::SetPath( ILoftPath *p )
 {
-	m_pPath = p;
-	return *this;
+	m_pPath = (Path*)p;
+	return this;
 }
 
-Loft& Loft::SetShape( Shape *s )
+Loft* Loft::SetShape( ILoftShape *s )
 {
-	m_pShape = s;
-	return *this;
+	m_pShape = (Shape*)s;
+	return this;
 }
 
 bool Loft::Realize( osg::Group *parentGroup )
@@ -103,7 +113,7 @@ bool Loft::Realize( osg::Group *parentGroup )
 	if( num_path_points > 2 ) // More then two points - complex path
 	{
 		Matrixd all_translate;
-		for( size_t i = 1; i < num_path_points-1 ; ++i )
+		for( int i = 1; i < num_path_points-1 ; ++i )
 		{
 			Vec3 i_minus_1 = (*m_pPath)[i-1];
 			Vec3 i_plus_1 = (*m_pPath)[i+1];
@@ -143,7 +153,7 @@ void Loft::makeGeometry( osg::Group *g )
 	int total_points = m_pShape->Get()->size();
 	for( size_t slice_index = 0; slice_index < m_ShapeSlices.size()-1 ; ++slice_index )
 	{
-		for( size_t point_index = 0; point_index < total_points-1; ++point_index )
+		for( int point_index = 0; point_index < total_points-1; ++point_index )
 		{
 			Geode *geo = Geometry3D::Get().CreateGeometryQuad( 
 				(*m_ShapeSlices[ slice_index ])[ point_index ],
@@ -167,4 +177,24 @@ void Loft::makeGeometry( osg::Group *g )
 			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
 		}
 	}
+}
+// create a Loft::Path new instance
+ILoftPath *Loft::NewPath()
+{
+	Path *obj = new Loft::Path();
+	m_PathObjects.push_back( obj );
+	return obj ;
+}
+			// create a Loft::Shape new instance
+ILoftShape *Loft::NewShape( UT_PIVOT_PLANE pivotPlane )
+{
+	Shape *obj = new Loft::Shape( pivotPlane );
+	m_ShapeObjects.push_back( obj );
+	return obj;
+}
+
+Loft::~Loft()
+{
+	std::for_each( m_PathObjects.begin(), m_PathObjects.end(), deleteUsedObject< Path* > );
+	std::for_each( m_ShapeObjects.begin(), m_ShapeObjects.end(), deleteUsedObject< Shape* > );
 }

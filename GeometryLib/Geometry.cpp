@@ -3,6 +3,7 @@
 #include "osg/Math"
 #include "osg/BlendFunc"
 
+
 using namespace osg;
 using namespace Utility;
 using namespace Utility::GeometryFactory;

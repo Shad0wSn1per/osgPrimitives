@@ -2,7 +2,8 @@
 #ifndef __OSG_GEOMETRY_2D_H__
 #define __OSG_GEOMETRY_2D_H__
 #include "Singleton.h"
-#include "Enums.h"
+
+#include "IProcedural.h"
 
 
 namespace Utility
@@ -14,7 +15,7 @@ namespace Utility
 		
 
 
-		class Geometry2D : public Singleton< Utility::GeometryFactory::Geometry2D >
+		class Geometry2D : public Singleton< Utility::GeometryFactory::Geometry2D >, public IGeometry2D
 		{
 		public :
 			osg::Vec3Array *GetCircleShapePoints( double radius, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16 );
@@ -44,7 +45,7 @@ namespace Utility
 		};
 
 
-		class Geometry3D : public Singleton< Geometry3D >
+		class Geometry3D : public Singleton< Geometry3D >, public IGeometry3D
 		{
 		public:
 			osg::Group *GetCylinder( double R, double L, bool CapEnds = true, UT_PIVOT_PLANE basePlane = PIVOT_PLANE_YZ, int numSegments = 16 );
