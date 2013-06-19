@@ -58,6 +58,10 @@
       <AdditionalLibraryDirectories>$(OSG_ROOT)\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>osgViewerd.lib;osgDBd.lib;osgGAd.lib;osgUtild.lib;osgd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)\$(TargetFileName)" "$(OSG_ROOT)\Bin\$(Configuration)"
+</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

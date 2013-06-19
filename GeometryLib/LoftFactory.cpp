@@ -101,8 +101,10 @@ bool Loft::Realize( osg::Group *parentGroup )
 	Vec3 last = (*m_pPath)[ num_path_points-1 ];
 	Vec3 pre_last = (*m_pPath)[ num_path_points-2 ];
 
+	
 	ref_ptr< MatrixTransform > mt_first = new MatrixTransform;
-	mt_first->setMatrix( Matrixd::rotate( m_pShape->GetDirection(), next_first - first ) * Matrixd::translate( first ) );
+	Matrixd all_translate = Matrixd::translate( first );
+	mt_first->setMatrix( Matrixd::rotate( m_pShape->GetDirection(), next_first - first ) * all_translate );
 
 	
 	m_ShapeSlices.clear();
@@ -112,7 +114,7 @@ bool Loft::Realize( osg::Group *parentGroup )
 
 	if( num_path_points > 2 ) // More then two points - complex path
 	{
-		Matrixd all_translate;
+		
 		for( int i = 1; i < num_path_points-1 ; ++i )
 		{
 			Vec3 i_minus_1 = (*m_pPath)[i-1];
@@ -151,9 +153,13 @@ bool Loft::Realize( osg::Group *parentGroup )
 void Loft::makeGeometry( osg::Group *g )
 {
 	int total_points = m_pShape->Get()->size();
-	for( size_t slice_index = 0; slice_index < m_ShapeSlices.size()-1 ; ++slice_index )
+	int num_slices = m_ShapeSlices.size();
+	for( size_t slice_index = 0; slice_index < num_slices-1 ; ++slice_index )
 	{
-		for( int point_index = 0; point_index < total_points-1; ++point_index )
+		Geode *geo = Geometry3D::Get().CreateShape( m_ShapeSlices[slice_index], m_ShapeSlices[slice_index+1], m_pShape->IsClosed() );
+		//Geometry2D::Get().GenerateTriangleStripTextureCoordinates( (Geometry*)geo->getDrawable(0), slice_index, num_slices );
+		g->addChild( geo );
+		/*for( int point_index = 0; point_index < total_points-1; ++point_index )
 		{
 			Geode *geo = Geometry3D::Get().CreateGeometryQuad( 
 				(*m_ShapeSlices[ slice_index ])[ point_index ],
@@ -175,7 +181,37 @@ void Loft::makeGeometry( osg::Group *g )
 				(*m_ShapeSlices[ slice_index+1 ])[ sl1-1 ] );
 			g->addChild( geo );
 			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
+		}*/
+	}
+
+	if( m_bClosed )
+	{
+		Geode *geo = Geometry3D::Get().CreateShape( m_ShapeSlices[ num_slices-1 ], m_ShapeSlices[ 0 ], m_pShape->IsClosed() );
+		//Geometry2D::Get().GenerateTriangleStripTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
+		g->addChild( geo );
+		/*int num_slices = m_ShapeSlices.size();
+		for( int point_index = 0; point_index < total_points-1; ++point_index )
+		{
+			Geode *geo = Geometry3D::Get().CreateGeometryQuad( 
+				(*m_ShapeSlices[ num_slices-1 ])[ point_index ],
+				(*m_ShapeSlices[ num_slices-1 ])[ point_index+1 ],
+				(*m_ShapeSlices[ 0 ])[ point_index+1 ],
+				(*m_ShapeSlices[ 0 ])[ point_index ] );
+			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), point_index, total_points );
+			g->addChild( geo );
 		}
+		if(  m_pShape->IsClosed() )
+		{
+			int sl0 = (*m_ShapeSlices[ num_slices-1 ]).size();
+			int sl1 = (*m_ShapeSlices[ 0 ]).size();
+			Geode *geo =Geometry3D::Get().CreateGeometryQuad( 
+				(*m_ShapeSlices[ num_slices-1 ])[ sl0-1 ],
+				(*m_ShapeSlices[ num_slices-1 ])[ 0 ],
+				(*m_ShapeSlices[ 0 ])[ 0 ],
+				(*m_ShapeSlices[ 0 ])[ sl1-1 ] );
+			g->addChild( geo );
+			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
+		}*/
 	}
 }
 // create a Loft::Path new instance

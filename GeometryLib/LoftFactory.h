@@ -74,10 +74,17 @@ namespace Utility
 			Loft()
 				: m_pPath(0)
 				, m_pShape(0)
+				, m_bClosed( false )
 			{}
 
 			~Loft();
 			bool Realize( osg::Group *group );
+			Loft* CloseContour( bool value )
+			{
+				m_bClosed = value;
+				return this;
+			} 
+			bool IsClosed(){ return m_bClosed; }
 			
 
 			Loft* SetPath( ILoftPath *p );
@@ -97,6 +104,7 @@ namespace Utility
 			Shape * m_pShape;
 			std::vector< Path* > m_PathObjects;
 			std::vector< Shape* >m_ShapeObjects;
+			bool m_bClosed;
 
 		private:
 			void makeGeometry( osg::Group *parentGroup );

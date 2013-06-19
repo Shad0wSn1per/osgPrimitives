@@ -2,7 +2,9 @@
 #include "Geometry.h"
 #include "osg/Math"
 #include "osg/BlendFunc"
-
+#include "osgUtil/SmoothingVisitor"
+#include "osg/ShadeModel"
+#include "osg/Material"
 
 using namespace osg;
 using namespace Utility;
@@ -104,6 +106,8 @@ void Geometry2D::TransformPoints( osg::Vec3Array *arr, osg::MatrixTransform *mt 
 		(*arr)[i] = (*arr)[i]* m;
 }
 
+
+
 osg::Geode* Geometry3D::CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 )
 {
 	Geode *geo = new Geode;
@@ -157,6 +161,37 @@ osg::Group *Geometry3D::CreateCylinder(
 	return nullptr;
 }
 
+osg::Geode* Geometry3D::CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed )
+{
+	int arr_size = slice0->size();
+	if( arr_size < 2 || arr_size != slice1->size() )
+		return nullptr;
+	Geode *geo = new Geode;
+	Geometry *geom = new Geometry;
+	ref_ptr< Vec3Array > strip_points = new Vec3Array;
+	for( int idx = 0; idx < arr_size-1; ++idx )
+	{
+		strip_points->push_back( (*slice1 )[ idx ] );
+		strip_points->push_back( (*slice0 )[ idx ] );
+		strip_points->push_back( (*slice1 )[ idx+1 ] );
+		strip_points->push_back( (*slice0 )[ idx+1 ] );
+	}
+	if( closed )
+	{
+		strip_points->push_back( (*slice1 )[ arr_size-1 ] );
+		strip_points->push_back( (*slice0 )[ arr_size-1 ] );
+		strip_points->push_back( (*slice1 )[ 0 ] );
+		strip_points->push_back( (*slice0 )[ 0 ] );
+	}
+	geom->setVertexArray( strip_points );
+	geom->addPrimitiveSet( new DrawArrays( PrimitiveSet::TRIANGLE_STRIP, 0, strip_points->size() ));
+	geo->addDrawable( geom );
+	
+	//geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::ON | StateAttribute::OVERRIDE );
+	return geo;
+
+}
+
 osg::Geode *Geometry3D::DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4f &color )
 {
 	Geometry *geom = new Geometry;
@@ -173,7 +208,7 @@ osg::Geode *Geometry3D::DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, co
 	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(1);
 	(*colors)[0] = color;
 	geom->setColorArray(colors.get());
-	geom->setColorBinding(osg::Geometry::BIND_OVERALL);
+	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
 
 	Geode* geo = new Geode;
 	geo->addDrawable( geom );
@@ -191,4 +226,19 @@ void Geometry2D::GenerateQuadTextureCoordinates( osg::Geometry* geometry, float 
 	(*texcoord)[2] = osg::Vec2( 1.0 , V + step );
 	(*texcoord)[3] = osg::Vec2( 1.0, V );
 	geometry->setTexCoordArray( 0, texcoord.get() );
+}
+
+void Geometry2D::GenerateTriangleStripTextureCoordinates( osg::Geometry* geom,float curStripeIndex,float totalStripes )
+{
+	osg::Vec2Array * texcoord = new osg::Vec2Array;
+	float Ustep = 1 / totalStripes;
+	//float Vstep = 1 / numSlicePoints;
+	float currU = curStripeIndex / totalStripes;
+	texcoord->push_back( osg::Vec2( currU, 0 ));
+	texcoord->push_back( osg::Vec2( currU, 1 ));
+	texcoord->push_back( osg::Vec2( currU+Ustep, 0 ));
+	texcoord->push_back( osg::Vec2( currU+Ustep, 1 ));
+	geom->setTexCoordArray( 0, texcoord );
+	
+	
 }

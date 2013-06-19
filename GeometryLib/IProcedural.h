@@ -18,6 +18,7 @@ Copyright (c) 2013 Integra-S JSC
 #include "osg/Array"
 #include "osg/Vec3"
 
+
 namespace Utility
 {
 	namespace GeometryFactory
@@ -69,6 +70,8 @@ namespace Utility
 			virtual osg::Geode* CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 ) = 0;
 
 			virtual osg::Geode *DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0) ) = 0;
+
+			virtual osg::Geode *CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed ) = 0;
 		};
 
 		struct ILoft
@@ -82,6 +85,9 @@ namespace Utility
 			virtual bool Realize( osg::Group *group ) = 0;
 			virtual ILoft* SetPath( ILoftPath *p ) = 0;
 			virtual ILoft* SetShape( ILoftShape *p ) = 0;
+			virtual ILoft* CloseContour( bool value ) = 0;
+			virtual bool IsClosed() = 0;
+
 		};
 
 		struct  IFactory

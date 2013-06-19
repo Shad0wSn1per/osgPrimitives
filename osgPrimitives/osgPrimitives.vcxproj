@@ -60,6 +60,7 @@
     </Link>
     <PostBuildEvent>
       <Command>copy "$(OutDir)\$(TargetFileName)" "$(OSG_ROOT)\Bin\$(Configuration)"
+
 copy "$(OutDir)\$(TargetName).pdb" "$(OSG_ROOT)\Bin\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
