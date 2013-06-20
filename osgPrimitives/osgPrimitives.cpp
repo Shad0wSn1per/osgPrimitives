@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "../GeometryLib/IProcedural.h"
 #include <Windows.h>
+#include "PathEditor.h"
 
 using namespace osg;
 using namespace Utility::GeometryFactory;
@@ -37,10 +38,22 @@ int _tmain(int argc, _TCHAR* argv[])
 	ILoftPath *path = loft->NewPath();
 	ILoftShape *shape = loft->NewShape( PIVOT_PLANE_YZ );
 	//path->AddPoint( Vec3( 10,0,0 ))->AddPoint( Vec3( 50, 25, 0 ) )->AddPoint( 100, 25, 20 )->AddPoint( 200,50,0)->AddPoint( 250, 50, 15 );
-	float radius = 4;
+	float radius = 2;
 	float pr = radius * 1.3;
 	float rad = sqrt( 2*radius*radius ) - radius;
-	path->AddPoint( 40, 0 , 0)
+	PathEditor editor;
+	editor.AddPoint( Vec3( 35.05,43.83,0 ));
+	editor.AddPoint( Vec3( 163.27,117.75,0 ));
+	editor.AddPoint( Vec3( 273.12,0.05,0 ));
+	//PathEditor::PATH_TRAECTORY::iterator point = editor.GetPoint( Vec3( 163.27,117.75,0 ) );
+	int idx = editor.Find(  Vec3( 163.27,117.75,0 ) );
+	if( idx != -1 )
+	{
+		PathEditor::PATH_POINT &point = editor.GetPoint( idx );
+		point.SetType( PathEditor::PT_ROUND );
+		point.SetCornerRadius( 100.5 );
+		path->SetPath( editor.GetPath() );
+		/*path->AddPoint( 40, 0 , 0)
 		->AddPoint( pr, 0 , 0)
 		->AddPoint( rad, rad, 0 )
 		->AddPoint( 0, pr, 0 )
@@ -50,16 +63,17 @@ int _tmain(int argc, _TCHAR* argv[])
 		->AddPoint( 120, 40, 0 )
 		->AddPoint( 120,0,0 )
 		->AddPoint( 100,0,0 );
-	//path->SetPath( *factory->Geometry2D()->GetCircleShapePoints( 50, PIVOT_PLANE_XY, 16 ) );
-	
+		//path->SetPath( *factory->Geometry2D()->GetCircleShapePoints( 50, PIVOT_PLANE_XY, 16 ) );
+		*/
 
-	
-	shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 32 ) )->CloseShape( true );
-	loft->SetPath( path )->SetShape( shape )->CloseContour(true)->Realize( cyl_grp );
-	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
-	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,200,0 ), Vec4( 1,0,0,1)));
-	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,200 ), Vec4( 0,0,1,1)));
-	root->addChild( cyl_grp );
+
+		shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 32 ) )->CloseShape( true );
+		loft->SetPath( path )->SetShape( shape )->CloseContour(false)->Realize( cyl_grp );
+		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
+		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,200,0 ), Vec4( 1,0,0,1)));
+		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,200 ), Vec4( 0,0,1,1)));
+		root->addChild( cyl_grp );
+	}
 	/*cyl_grp->getOrCreateStateSet()->setTextureAttributeAndModes(
 		0, new Texture2D( osgDB::readImageFile( "Dirt.jpg" )), StateAttribute::ON );*/
 	viewer.setSceneData( root.get() );

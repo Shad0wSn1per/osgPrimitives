@@ -41,6 +41,7 @@ namespace Utility
 			virtual ILoftPath* AddPoint( const osg::Vec3 &point ) = 0;
 			virtual ILoftPath* AddPoint( const float x, const float y,const float z ) = 0;
 			virtual ILoftPath* SetPath( const osg::Vec3Array &path ) = 0;
+			virtual ILoftPath* SetPath( const osg::Vec3Array *path ) = 0;
 			virtual osg::Vec3& operator[]( size_t idx ) = 0;
 			virtual void Clear() = 0;
 			virtual std::vector< osg::Vec3 > Get() = 0;

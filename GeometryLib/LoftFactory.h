@@ -22,6 +22,7 @@ namespace Utility
 				Path* AddPoint( const osg::Vec3 &point );
 				Path* AddPoint( const float x, const float y,const float z );
 				Path* SetPath( const osg::Vec3Array &path );
+				Path* SetPath( const osg::Vec3Array *path );
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				std::vector< osg::Vec3 > Get();

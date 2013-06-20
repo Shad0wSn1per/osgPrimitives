@@ -38,6 +38,13 @@ Loft::Path* Loft::Path::SetPath( const osg::Vec3Array &path )
 	return this;
 }
 
+Loft::Path* Loft::Path::SetPath( const osg::Vec3Array *path )
+{
+	m_Path.clear();
+	m_Path.assign( path->begin(), path->end());
+	return this;
+}
+
 Vec3& Loft::Path::operator[]( size_t idx )
 {
 	if( !m_Path.empty() && idx < m_Path.size() )
