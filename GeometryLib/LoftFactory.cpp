@@ -5,13 +5,28 @@
 using namespace osg;
 using namespace Utility::GeometryFactory;
 
-template< class T >
- void deleteUsedObject ( T ptr )
+
+namespace Utility
 {
-	if( ptr )
+	namespace GeometryFactory
 	{
-		delete ptr;
-		ptr = nullptr;
+
+		template< class T >
+		void deleteUsedObject ( T ptr )
+		{
+			if( ptr )
+			{
+				delete ptr;
+				ptr = nullptr;
+			}
+		}
+	}
+
+
+	//bool isPoint( Loft::CONTROL_POINT &point, osg::Vec3& pos )
+	bool isPoint( const osg::Vec3&point, osg::Vec3& pos )
+	{
+		return point == pos;
 	}
 }
 
@@ -88,6 +103,18 @@ void Loft::Path::generatePath()
 	}
 }
 
+
+int Loft::PickPoint( const osg::Vec3& pos )
+{
+	Vec3Array *cp = m_pPath->GetControlPointsArray();
+	Vec3Array::iterator itr = std::find_if( cp->begin(), cp->end(), std::bind( isPoint, std::placeholders::_1, pos ));
+	if ( itr == cp->end() )
+		return -1;
+	else
+		return itr - cp->begin();
+
+}
+
 void Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
 {
 	//int index = corner - m_Traectory.begin();
@@ -140,7 +167,7 @@ Vec3& Loft::Path::operator[]( size_t idx )
 	{
 		return (*m_Path)[idx];
 	}
-	throw( "Index out of range" );
+	throw std::out_of_range(  "Index out of range" );
 }
 
 

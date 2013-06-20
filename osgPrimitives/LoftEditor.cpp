@@ -5,12 +5,12 @@
 using namespace osg;
 using namespace Utility::GeometryFactory;
 
-bool isPoint( LoftEditor::PATH_POINT &point, osg::Vec3& pos )
-{
-	if( !point.Vaild() )
-		return false;
-	return point.GetPosition() == pos;
-}
+//bool isPoint( LoftEditor::PATH_POINT &point, osg::Vec3& pos )
+//{
+//	if( !point.Vaild() )
+//		return false;
+//	return point.GetPosition() == pos;
+//}
 
 LoftEditor::LoftEditor( ILoft* loft )
 	: m_bVisible( false )

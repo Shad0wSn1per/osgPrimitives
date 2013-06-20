@@ -13,13 +13,6 @@ namespace Utility
 		{
 		public:
 
-			typedef enum
-			{
-				PT_CORNER,
-				PT_ROUND,
-				PT_UNDEFINED = 0xFF
-			} POINT_TYPE;
-			
 			typedef class PathPoint
 			{
 				osg::Vec3 m_Position;

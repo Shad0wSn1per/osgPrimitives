@@ -62,7 +62,8 @@ namespace Utility
 			{
 				osg::ref_ptr< osg::Vec3Array > m_Path;
 				osg::ref_ptr< osg::Vec3Array> m_Anchors;
-				std::vector< ControlPoint > m_ControlPoints;
+				typedef std::vector< ControlPoint > CONTROL_POINTS;
+				CONTROL_POINTS m_ControlPoints;
 					
 			public:
 				Path* AddPoint( const osg::Vec3 &point );
@@ -76,7 +77,7 @@ namespace Utility
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				osg::Vec3Array *Get();
-				osg::Vec3Array *GetControlPoints();
+				osg::Vec3Array *GetControlPointsArray(){ return m_Anchors.get(); }
 				Path()
 				{
 					m_Path = new osg::Vec3Array;
@@ -162,6 +163,8 @@ namespace Utility
 			virtual ILoftPath* GetPath(){ return m_pPath; }
 			virtual ILoftShape* GetShape(){ return m_pShape; }
 			virtual osg::Group* GetModelGroup(){ return m_ModelGroup.get(); }
+
+			int PickPoint( const osg::Vec3& pos );
 
 		private:
 			
