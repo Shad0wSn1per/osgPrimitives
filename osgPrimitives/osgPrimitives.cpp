@@ -4,10 +4,56 @@
 #include "stdafx.h"
 #include "../GeometryLib/IProcedural.h"
 #include <Windows.h>
-#include "PathEditor.h"
+#include "LoftEditor.h"
+#include <assert.h>
 
 using namespace osg;
 using namespace Utility::GeometryFactory;
+
+class EditorHandler :public osgGA::GUIEventHandler
+{
+public:
+	EditorHandler( osg::Group* object, LoftEditor* editor, ILoft *loftModel ) 
+		: _model(object) 
+		, m_pEditor( editor )
+		, m_pLoft( loftModel )
+	{
+		assert( object || editor );
+	} 
+	virtual bool handle( const osgGA::GUIEventAdapter& ea,
+		osgGA::GUIActionAdapter& aa )
+	{
+		switch ( ea.getEventType() )
+		{
+		case osgGA::GUIEventAdapter::KEYDOWN:
+			switch ( ea.getKey() )
+			{
+			case 'q': case 'Q':
+
+				if( m_pEditor->IsVisible() )
+				{
+					m_pEditor->SetVisible( false );
+					m_pLoft->Realize();
+				}
+				else
+				{
+					m_pEditor->SetVisible( true );
+					_model->removeChild(0, _model->getNumChildren() );
+				}
+				break;
+			};
+			break;
+		};
+	}
+protected:
+	osg::ref_ptr<osg::Group> _model;
+	Utility::GeometryFactory::LoftEditor* m_pEditor;
+	ILoft *m_pLoft;
+
+};
+
+
+
 int _tmain(int argc, _TCHAR* argv[])
 {
 	osgViewer::Viewer viewer;
@@ -34,14 +80,14 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	ref_ptr< Group > root = new Group;
 	ref_ptr< Group > cyl_grp = new Group;
-	ILoft *loft = factory->Loft();
+	ILoft *loft = factory->Loft( cyl_grp );
 	ILoftPath *path = loft->NewPath();
 	ILoftShape *shape = loft->NewShape( PIVOT_PLANE_YZ );
 	//path->AddPoint( Vec3( 10,0,0 ))->AddPoint( Vec3( 50, 25, 0 ) )->AddPoint( 100, 25, 20 )->AddPoint( 200,50,0)->AddPoint( 250, 50, 15 );
 	float radius = 2;
 	float pr = radius * 1.3;
 	float rad = sqrt( 2*radius*radius ) - radius;
-	PathEditor editor;
+	LoftEditor editor( loft );
 	editor.AddPoint( Vec3( 35.05,43.83,0 ));
 	editor.AddPoint( Vec3( 163.27,117.75,0 ));
 	editor.AddPoint( Vec3( 273.12,0.05,0 ));
@@ -49,10 +95,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	int idx = editor.Find(  Vec3( 163.27,117.75,0 ) );
 	if( idx != -1 )
 	{
-		PathEditor::PATH_POINT &point = editor.GetPoint( idx );
-		point.SetType( PathEditor::PT_ROUND );
+		LoftEditor::PATH_POINT &point = editor.GetPoint( idx );
+		point.SetType( LoftEditor::PT_ROUND );
 		point.SetCornerRadius( 100.5 );
-		path->SetPath( editor.GetPath() );
+		//path->SetPath( editor.GetPath() );
 		/*path->AddPoint( 40, 0 , 0)
 		->AddPoint( pr, 0 , 0)
 		->AddPoint( rad, rad, 0 )
@@ -68,7 +114,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 		shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 32 ) )->CloseShape( true );
-		loft->SetPath( path )->SetShape( shape )->CloseContour(false)->Realize( cyl_grp );
+		loft->SetPath( path )->SetShape( shape )->CloseContour(false)->Realize(  );
 		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
 		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,200,0 ), Vec4( 1,0,0,1)));
 		root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,200 ), Vec4( 0,0,1,1)));

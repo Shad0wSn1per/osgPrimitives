@@ -22,9 +22,9 @@ IGeometry3D * Factory::Geometry3D()
 	return &Geometry3D::Get();
 }
 
-ILoft * Factory::Loft()
+ILoft * Factory::Loft( osg::Group * g  )
 {
-	Utility::GeometryFactory::Loft *obj = new Utility::GeometryFactory::Loft();
+	Utility::GeometryFactory::Loft *obj = new Utility::GeometryFactory::Loft( g );
 	m_LoftObjects.push_back( obj );
 	return obj;
 }

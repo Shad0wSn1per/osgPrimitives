@@ -20,7 +20,7 @@ namespace Utility
 			
 			virtual Utility::GeometryFactory::IGeometry2D *Geometry2D();
 			virtual IGeometry3D *Geometry3D();
-			virtual ILoft *Loft();
+			virtual ILoft *Loft( osg::Group * g );
 			~Factory();
 		private:
 			std::vector< Utility::GeometryFactory::Loft* > m_LoftObjects;

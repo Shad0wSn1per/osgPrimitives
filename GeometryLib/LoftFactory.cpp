@@ -18,7 +18,12 @@ template< class T >
 Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point )
 {
 	if( point.valid() )
-		m_Path.push_back( point );
+	{
+		//TODO : Remove m_Path from here
+		m_Path.get()->push_back( point );
+		m_Anchors.get()->push_back( point );
+		m_ControlPoints.push_back( CONTROL_POINT( &m_Anchors->back() ));
+	}
 	return this;
 }
 
@@ -27,29 +32,113 @@ Loft::Path* Loft::Path::AddPoint( const float x, const float y,const float z )
 	return AddPoint( Vec3( x, y, z ) );
 }
 
-Loft::Path::PATH Loft::Path::Get(){ return m_Path; }
 
-void Loft::Path::Clear(){ m_Path.clear(); }
-
-Loft::Path* Loft::Path::SetPath( const osg::Vec3Array &path )
+Loft::Path* Loft::Path::InsertPoint( size_t after, const osg::Vec3 &point )
 {
-	m_Path.clear();
-	m_Path.assign( path.begin(), path.end());
+	if( after > m_Anchors->size()-2 )
+		throw std::out_of_range( "Index out of range. Array to small or you try to insert after last element" );
+	m_Anchors->insert( m_Anchors->begin() + after + 1, point );
+	m_ControlPoints.insert( m_ControlPoints.begin() + after + 1,CONTROL_POINT( &m_Anchors->at( after + 1 )));
 	return this;
 }
 
-Loft::Path* Loft::Path::SetPath( const osg::Vec3Array *path )
+Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point, POINT_TYPE type, float radius )
 {
-	m_Path.clear();
-	m_Path.assign( path->begin(), path->end());
+	AddPoint( point );
+	CONTROL_POINT& cp = m_ControlPoints.back();
+	cp.SetType( type );
+	cp.SetCornerRadius( radius );
 	return this;
 }
+
+Loft::Path* Loft::Path::AddPoint( const float x, const float y,const float z, POINT_TYPE type, float radius )
+{
+	AddPoint( osg::Vec3( x,y,z ), type, radius );
+	return this;
+}
+
+Loft::Path* Loft::Path::InsertPoint( size_t after, const float x, const float y,const float z )
+{
+	return InsertPoint( after, Vec3( x,y,z ));
+}
+
+osg::Vec3Array * Loft::Path::Get(){ return m_Path.get(); }
+
+void Loft::Path::Clear(){ m_Path->clear(); }
+
+
+void Loft::Path::generatePath()
+{
+	m_Path->clear();
+	Vec3Array::iterator itr = m_Anchors->begin();
+	Vec3Array::iterator itr_e = m_Anchors->end();
+	int index = 0;
+	while( itr != itr_e )
+	{
+		CONTROL_POINT cp = m_ControlPoints.at( index );
+		if( cp.Type() == PT_CORNER )
+		{
+			m_Path->push_back( *itr );
+		}
+		else
+		{
+		}
+		++index;
+		++itr;
+	}
+}
+
+void Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
+{
+	//int index = corner - m_Traectory.begin();
+	
+	if( corner_index == 0 || corner_index == m_ControlPoints.size()-2 )
+		return;
+	CONTROL_POINT current = m_ControlPoints.at( corner_index );
+	CONTROL_POINT prev = m_ControlPoints.at( corner_index -1 );
+	CONTROL_POINT next = m_ControlPoints.at( corner_index + 1 );
+
+	Vec3 currPos = *current.Position();
+	Vec3 prevPos = *prev.Position();
+	Vec3 nextPos = *next.Position();
+
+	Vec3 AB = currPos - prevPos;
+	double AB_len = AB.length();
+	Vec3 BC =  nextPos - currPos;
+	double BC_len = BC.length();
+	Vec3 ABC_norm = ( AB ^ BC );
+	Vec3 HO = ABC_norm ^ AB;
+	HO.normalize();
+	double R = current.GetCornerRadius();
+	HO *= R;
+	double corner_angle = osg::PI - acos( AB*BC/( AB_len * BC_len)) ;
+	double HB = R / tan( corner_angle/2.0 );
+	AB.normalize();
+	Vec3 AH = AB*( AB_len - HB );
+	Vec3 WH = prevPos + AH;
+	Vec3 WO = WH + HO;
+	
+	arr->push_back( WH );
+	Vec3 OH = WH - WO;
+	BC.normalize();
+	Vec3 final =currPos + BC * HB;
+	Vec3 OH_ = final - WO;
+	double kink_angle = acos( OH*OH_/( R * R )) ;
+	double angle_step = kink_angle / 16.0 ;
+	for( double i = 0; i < kink_angle ; i += angle_step )
+	{
+		Matrixd rm = Matrixd::rotate( -angle_step, ABC_norm );
+		OH = Matrixd::transform3x3( rm, OH );
+		arr->push_back( WO + OH );
+	}
+}
+
 
 Vec3& Loft::Path::operator[]( size_t idx )
 {
-	if( !m_Path.empty() && idx < m_Path.size() )
+	if( !m_Path->empty() && idx < m_Path->size() )
 	{
-		return m_Path[idx];
+		return (*m_Path)[idx];
 	}
 	throw( "Index out of range" );
 }
@@ -94,9 +183,10 @@ Loft* Loft::SetShape( ILoftShape *s )
 	return this;
 }
 
-bool Loft::Realize( osg::Group *parentGroup )
+//bool Loft::Realize( osg::Group *parentGroup )
+bool Loft::Realize(  )
 {
-	int num_path_points = m_pPath->Get().size();
+	int num_path_points = m_pPath->Get()->size();
 	if( !m_pPath || !m_pShape ||  num_path_points <= 1 )
 		return false;
 	
@@ -121,7 +211,6 @@ bool Loft::Realize( osg::Group *parentGroup )
 
 	if( num_path_points > 2 ) // More then two points - complex path
 	{
-		
 		for( int i = 1; i < num_path_points-1 ; ++i )
 		{
 			Vec3 i_minus_1 = (*m_pPath)[i-1];
@@ -153,7 +242,7 @@ bool Loft::Realize( osg::Group *parentGroup )
 	}
 
 	
-	makeGeometry( parentGroup );
+	makeGeometry( m_ModelGroup );
 	return true;
 }
 
@@ -161,64 +250,16 @@ void Loft::makeGeometry( osg::Group *g )
 {
 	int total_points = m_pShape->Get()->size();
 	int num_slices = m_ShapeSlices.size();
-	for( size_t slice_index = 0; slice_index < num_slices-1 ; ++slice_index )
+	for( int slice_index = 0; slice_index < num_slices-1 ; ++slice_index )
 	{
 		Geode *geo = Geometry3D::Get().CreateShape( m_ShapeSlices[slice_index], m_ShapeSlices[slice_index+1], m_pShape->IsClosed() );
-		//Geometry2D::Get().GenerateTriangleStripTextureCoordinates( (Geometry*)geo->getDrawable(0), slice_index, num_slices );
 		g->addChild( geo );
-		/*for( int point_index = 0; point_index < total_points-1; ++point_index )
-		{
-			Geode *geo = Geometry3D::Get().CreateGeometryQuad( 
-				(*m_ShapeSlices[ slice_index ])[ point_index ],
-				(*m_ShapeSlices[ slice_index ])[ point_index+1 ],
-				(*m_ShapeSlices[ slice_index+1 ])[ point_index+1 ],
-				(*m_ShapeSlices[ slice_index+1 ])[ point_index ] );
-			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), point_index, total_points );
-			g->addChild( geo );
-
-		}
-		if( m_pShape->IsClosed() )
-		{
-			int sl0 = (*m_ShapeSlices[ slice_index ]).size();
-			int sl1 = (*m_ShapeSlices[ slice_index+1 ]).size();
-			Geode *geo =Geometry3D::Get().CreateGeometryQuad( 
-				(*m_ShapeSlices[ slice_index ])[ sl0-1 ],
-				(*m_ShapeSlices[ slice_index ])[ 0 ],
-				(*m_ShapeSlices[ slice_index+1 ])[ 0 ],
-				(*m_ShapeSlices[ slice_index+1 ])[ sl1-1 ] );
-			g->addChild( geo );
-			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
-		}*/
 	}
 
 	if( m_bClosed )
 	{
 		Geode *geo = Geometry3D::Get().CreateShape( m_ShapeSlices[ num_slices-1 ], m_ShapeSlices[ 0 ], m_pShape->IsClosed() );
-		//Geometry2D::Get().GenerateTriangleStripTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
 		g->addChild( geo );
-		/*int num_slices = m_ShapeSlices.size();
-		for( int point_index = 0; point_index < total_points-1; ++point_index )
-		{
-			Geode *geo = Geometry3D::Get().CreateGeometryQuad( 
-				(*m_ShapeSlices[ num_slices-1 ])[ point_index ],
-				(*m_ShapeSlices[ num_slices-1 ])[ point_index+1 ],
-				(*m_ShapeSlices[ 0 ])[ point_index+1 ],
-				(*m_ShapeSlices[ 0 ])[ point_index ] );
-			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), point_index, total_points );
-			g->addChild( geo );
-		}
-		if(  m_pShape->IsClosed() )
-		{
-			int sl0 = (*m_ShapeSlices[ num_slices-1 ]).size();
-			int sl1 = (*m_ShapeSlices[ 0 ]).size();
-			Geode *geo =Geometry3D::Get().CreateGeometryQuad( 
-				(*m_ShapeSlices[ num_slices-1 ])[ sl0-1 ],
-				(*m_ShapeSlices[ num_slices-1 ])[ 0 ],
-				(*m_ShapeSlices[ 0 ])[ 0 ],
-				(*m_ShapeSlices[ 0 ])[ sl1-1 ] );
-			g->addChild( geo );
-			Geometry2D::Get().GenerateQuadTextureCoordinates( (Geometry*)geo->getDrawable(0), total_points-1, total_points );
-		}*/
 	}
 }
 // create a Loft::Path new instance

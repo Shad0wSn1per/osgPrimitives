@@ -24,6 +24,8 @@ namespace Utility
 	namespace GeometryFactory
 	{
 
+		
+
 		struct ILoftShape
 		{
 			virtual ILoftShape* AddPoint( const osg::Vec3 &point ) = 0;
@@ -40,11 +42,13 @@ namespace Utility
 		{
 			virtual ILoftPath* AddPoint( const osg::Vec3 &point ) = 0;
 			virtual ILoftPath* AddPoint( const float x, const float y,const float z ) = 0;
-			virtual ILoftPath* SetPath( const osg::Vec3Array &path ) = 0;
-			virtual ILoftPath* SetPath( const osg::Vec3Array *path ) = 0;
+			virtual ILoftPath* AddPoint( const osg::Vec3 &point, POINT_TYPE type , float radius = 1 ) = 0;
+			virtual ILoftPath* AddPoint( const float x, const float y,const float z, POINT_TYPE type , float radius = 1 ) = 0;
+			virtual ILoftPath* InsertPoint( size_t after, const osg::Vec3 &point ) = 0;
+			virtual ILoftPath* InsertPoint( size_t after, const float x, const float y,const float z ) = 0;
 			virtual osg::Vec3& operator[]( size_t idx ) = 0;
 			virtual void Clear() = 0;
-			virtual std::vector< osg::Vec3 > Get() = 0;
+			virtual osg::Vec3Array * Get() = 0;
 		};
 
 		struct IGeometry2D
@@ -83,12 +87,17 @@ namespace Utility
 			// create a Loft::Shape new instance
 			virtual ILoftShape *NewShape( UT_PIVOT_PLANE pivotPlane ) = 0;
 
-			virtual bool Realize( osg::Group *group ) = 0;
+			//virtual bool Realize( osg::Group *group ) = 0;
+			virtual bool Realize(  ) = 0;
 			virtual ILoft* SetPath( ILoftPath *p ) = 0;
 			virtual ILoft* SetShape( ILoftShape *p ) = 0;
 			virtual ILoft* CloseContour( bool value ) = 0;
 			virtual bool IsClosed() = 0;
-
+			// returns a current Path, nullptr othercase
+			virtual ILoftPath* GetPath() = 0;
+			// returns a current Shape, nullptr othercase
+			virtual ILoftShape* GetShape() = 0;
+			virtual osg::Group* GetModelGroup() = 0;
 		};
 
 		struct  IFactory
@@ -97,8 +106,9 @@ namespace Utility
 			virtual Utility::GeometryFactory::IGeometry2D *Geometry2D()=0;
 			// returns an singleton instane of a Geometry3D
 			virtual IGeometry3D *Geometry3D() = 0;
-			// return new instance of a Loft
-			virtual ILoft *Loft() = 0;
+			// returns new instance of a Loft
+			virtual ILoft *Loft( osg::Group * g ) = 0;
+			
 		};
 	}
 }

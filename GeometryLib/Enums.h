@@ -14,6 +14,13 @@ namespace Utility
 			PIVOT_NONE = 0xFF
 
 		} UT_PIVOT_PLANE;
+
+		typedef enum
+		{
+			PT_CORNER,
+			PT_ROUND,
+			PT_UNDEFINED = 0xFF
+		} POINT_TYPE;
 	}
 }
 

@@ -7,7 +7,7 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="PathEditor.cpp">
+    <ClCompile Include="LoftEditor.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -18,7 +18,7 @@
     <ClInclude Include="targetver.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="PathEditor.h">
+    <ClInclude Include="LoftEditor.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

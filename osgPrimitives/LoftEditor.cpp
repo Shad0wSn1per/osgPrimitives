@@ -1,25 +1,32 @@
 #include "stdafx.h"
-#include "PathEditor.h"
+#include "LoftEditor.h"
+
 
 using namespace osg;
 using namespace Utility::GeometryFactory;
 
-bool isPoint( PathEditor::PATH_POINT &point, osg::Vec3& pos )
+bool isPoint( LoftEditor::PATH_POINT &point, osg::Vec3& pos )
 {
 	if( !point.Vaild() )
 		return false;
 	return point.GetPosition() == pos;
 }
 
-bool PathEditor::IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 )
+LoftEditor::LoftEditor( ILoft* loft )
+	: m_bVisible( false )
+	, m_Loft( loft )
+{
+	//if( m_Loft->`
+}
+
+bool LoftEditor::IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 )
 {
 	PATH_POINT pt0 = (*GetPoint( p0 ));
 	PATH_POINT pt1 = (*GetPoint( p1 ));
 	return pt0.Vaild() && pt1.Vaild() && pt0.Type() != PT_ROUND && pt1.Type() != PT_ROUND;
 }
 
-
-PathEditor::PATH_TRAECTORY::iterator PathEditor::GetPoint( const osg::Vec3& p )
+LoftEditor::PATH_TRAECTORY::iterator LoftEditor::GetPoint( const osg::Vec3& p )
 {
 	//PATH_POINT pt;
 	return std::find_if( m_Traectory.begin(), m_Traectory.end(), std::bind( isPoint, std::placeholders::_1, p ) );
@@ -36,7 +43,7 @@ PathEditor::PATH_TRAECTORY::iterator PathEditor::GetPoint( const osg::Vec3& p )
 	
 }
 
-osg::Vec3Array *PathEditor::GetVertexArray()
+osg::Vec3Array *LoftEditor::GetVertexArray()
 {
 	ref_ptr< Vec3Array > arr = new Vec3Array;
 	PATH_TRAECTORY::iterator itr = m_Traectory.begin();
@@ -45,14 +52,14 @@ osg::Vec3Array *PathEditor::GetVertexArray()
 	return arr.get();
 }
 
-void PathEditor::AddPoint( const Vec3 &pos )
+void LoftEditor::AddPoint( const Vec3 &pos )
 {
 	PATH_POINT pt;
 	pt.SetPosition( pos );
 	m_Traectory.push_back( pt );
 }
 
-bool PathEditor::InsertPoint( int after, const osg::Vec3 &pos )
+bool LoftEditor::InsertPoint( size_t after, const osg::Vec3 &pos )
 {
 	if( m_Traectory.size() > after )
 	{
@@ -64,7 +71,7 @@ bool PathEditor::InsertPoint( int after, const osg::Vec3 &pos )
 	return false;
 }
 
-bool PathEditor::RemovePoint( const osg::Vec3 &pos )
+bool LoftEditor::RemovePoint( const osg::Vec3 &pos )
 {
 	PATH_TRAECTORY::iterator itr = GetPoint( pos );
 	if( itr != m_Traectory.end() )
@@ -75,7 +82,7 @@ bool PathEditor::RemovePoint( const osg::Vec3 &pos )
 	return false;
 }
 
-osg::Vec3Array * PathEditor::GetPath()
+osg::Vec3Array * LoftEditor::GetPath()
 {
 	ref_ptr< Vec3Array > path = new Vec3Array;
 	PATH_TRAECTORY::iterator itr = m_Traectory.begin();
@@ -94,7 +101,7 @@ osg::Vec3Array * PathEditor::GetPath()
 	return path.release();
 }
 
-void PathEditor::createRoundedCorner( osg::Vec3Array *path, PATH_TRAECTORY::iterator corner )
+void LoftEditor::createRoundedCorner( osg::Vec3Array *path, PATH_TRAECTORY::iterator corner )
 {
 	int index = corner - m_Traectory.begin();
 	
@@ -136,7 +143,7 @@ void PathEditor::createRoundedCorner( osg::Vec3Array *path, PATH_TRAECTORY::iter
 	_asm nop;
 }
 
-int PathEditor::Find( const osg::Vec3& p )
+int LoftEditor::Find( const osg::Vec3& p )
 {
 	PATH_TRAECTORY::iterator obj = find_if( m_Traectory.begin(), m_Traectory.end(), std::bind( isPoint, std::placeholders::_1, p ));
 	
@@ -148,10 +155,34 @@ int PathEditor::Find( const osg::Vec3& p )
 	return -1;
 }
 
-PathEditor::PATH_POINT &PathEditor::GetPoint( int index )
+LoftEditor::PATH_POINT &LoftEditor::GetPoint( size_t index )
 {
 	if( index < 0 || m_Traectory.size() <= index )
 		throw "Index out of range";
 	return m_Traectory.at( index );
 }
+
+std::vector< osg::Vec3 > LoftEditor::GetControlPoints()
+{
+	std::vector< osg::Vec3 > v;
+	PATH_TRAECTORY::iterator itr = m_Traectory.begin();
+	while( itr != m_Traectory.end())
+	{
+		v.push_back( itr->GetPosition() );
+		++itr;
+	}
+	return v;
+}
+
+void LoftEditor::SetVisible( bool state )
+{
+	if( state )
+	{
+		
+	}
+	else
+	{
+	}
+}
+
 
