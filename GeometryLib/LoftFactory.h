@@ -58,8 +58,6 @@ namespace Utility
 				Path* InsertPoint( size_t after, const float x, const float y,const float z );
 				bool RemovePoint( int idx );
 				void SetCornerRadius( IControlPoint *p, float R );
-
-
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				osg::Vec3Array *Get();
@@ -73,11 +71,13 @@ namespace Utility
 
 				~Path(){};
 				void generatePath();
+
 			private:
 				
 				bool createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
 				void reindexPoints( CONTROL_POINTS::iterator from );
 				double calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 );
+				double getFreeLength( CONTROL_POINT &pt, bool prevPoint );
 			};
 
 			class Shape : public ILoftShape

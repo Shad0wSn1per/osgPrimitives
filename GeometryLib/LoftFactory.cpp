@@ -452,14 +452,16 @@ double Loft::Path::calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 )
 	return L * tan( corner_angle / 2.0 );
 }
 
-double Loft::Path::getFreeLength( CONTROL_POINT &pt, bool left )
+double Loft::Path::getFreeLength( CONTROL_POINT &pt, bool prevPoint )
 {
 	int i = pt.Index();
 	CONTROL_POINT prev = m_ControlPoints.at( i-1 );
 	CONTROL_POINT next = m_ControlPoints.at( i+1 );
-	Vec3 p = m_Anchors->at( i-1 );
-	Vec3 n = m_Anchors->at( i+1 );
 	Vec3 c = m_Anchors->at( i );
+	Vec3 p = c - m_Anchors->at( i-1 );
+	Vec3 n = m_Anchors->at( i+1 ) - c;
+	
 	double corner_angle = osg::PI - acos( p*n/( p.length() * n.length())) ;
-	return pt.Radius() / tan( corner_angle/2.0 );
+	double HB = pt.Radius() / tan( corner_angle/2.0 );
+	return prevPoint ? p.length() - HB : HB
 }
