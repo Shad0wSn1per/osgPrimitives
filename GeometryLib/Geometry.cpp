@@ -5,6 +5,7 @@
 #include "osgUtil/SmoothingVisitor"
 #include "osg/ShadeModel"
 #include "osg/Material"
+#include "osg/Point"
 
 using namespace osg;
 using namespace Utility;
@@ -161,7 +162,7 @@ osg::Group *Geometry3D::CreateCylinder(
 	return nullptr;
 }
 
-osg::Geode* Geometry3D::CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed )
+osg::Geode* Geometry3D::CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed, bool wireframe )
 {
 	int arr_size = slice0->size();
 	if( arr_size < 2 || arr_size != slice1->size() )
@@ -185,6 +186,17 @@ osg::Geode* Geometry3D::CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *sli
 	}
 	geom->setVertexArray( strip_points );
 	geom->addPrimitiveSet( new DrawArrays( PrimitiveSet::TRIANGLE_STRIP, 0, strip_points->size() ));
+	if( wireframe )
+	{
+
+		geom->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
+		osg::ref_ptr<osg::Vec4Array> colours (new osg::Vec4Array()); 
+		colours->assign( strip_points->size(), Vec4( 0.45,0.48, 0.65,1.0  ) );
+		geom->setColorArray(colours.get());
+		geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
+		geom->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
+	}
+
 	geo->addDrawable( geom );
 	
 	//geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::ON | StateAttribute::OVERRIDE );
@@ -205,14 +217,43 @@ osg::Geode *Geometry3D::DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, co
 	m_primSet->set(GL_LINES, 0, arr->size());
 	geom->addPrimitiveSet(m_primSet);
 
-	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(1);
+	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(2);
 	(*colors)[0] = color;
+	(*colors)[1] = color;
 	geom->setColorArray(colors.get());
 	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
 
 	Geode* geo = new Geode;
 	geo->addDrawable( geom );
 	geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
+	return geo;
+}
+
+osg::Geode *Geometry3D::DrawLine( osg::Vec3Array *from, const osg::Vec4 &color, bool showPoints )
+{
+	Geometry *geom = new Geometry;
+	geom->setUseDisplayList( false );
+	geom->setUseVertexBufferObjects(true);
+	int size = from->size();
+	geom->setVertexArray( from );
+	osg::DrawArrays *m_primSet = new osg::DrawArrays;
+	m_primSet->set(GL_LINE_STRIP, 0, size );
+	geom->addPrimitiveSet(m_primSet);
+
+	osg::ref_ptr<osg::Vec4Array> colors = new osg::Vec4Array(size);
+	colors->assign( size, color );
+	geom->setColorArray(colors.get());
+	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
+
+	Geode* geo = new Geode;
+	geo->addDrawable( geom );
+	geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
+	if( showPoints )
+	{
+		geom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS,0,size ));
+		geom->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
+		geom->getOrCreateStateSet()->setAttributeAndModes( new osg::Point( 7.0 ));
+	}
 	return geo;
 }
 
@@ -239,6 +280,38 @@ void Geometry2D::GenerateTriangleStripTextureCoordinates( osg::Geometry* geom,fl
 	texcoord->push_back( osg::Vec2( currU+Ustep, 0 ));
 	texcoord->push_back( osg::Vec2( currU+Ustep, 1 ));
 	geom->setTexCoordArray( 0, texcoord );
-	
-	
+}
+
+osg::Geode *Geometry3D::DrawPoint( const osg::Vec3 &pos, const osg::Vec4 &color )
+{
+	Geode* geode = new Geode;
+	Geometry *geometry = new Geometry;
+	osg::ref_ptr<osg::Vec3Array> vertices (new osg::Vec3Array()); 
+	vertices->push_back( pos );
+	osg::ref_ptr<osg::Vec4Array> colours (new osg::Vec4Array()); 
+	colours->push_back( color );
+	geometry->setColorArray(colours.get());
+	geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
+
+	geometry->setVertexArray( vertices );
+	geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS,0,1));
+	geometry->getOrCreateStateSet()->setAttributeAndModes( new osg::Point( 3.0 ));
+	geode->addDrawable( geometry );
+	return geode;
+}
+
+osg::Geode *Geometry3D::DrawPoint( osg::Vec3Array *from, const osg::Vec4 &color )
+{
+	Geode* geode = new Geode;
+	Geometry *geometry = new Geometry;
+	osg::ref_ptr<osg::Vec4Array> colours (new osg::Vec4Array()); 
+	colours->assign( from->size(), color );
+	geometry->setColorArray(colours.get());
+	geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
+	geometry->setVertexArray( from );
+	geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::POINTS,0,from->size()));
+	geometry->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
+	geometry->getOrCreateStateSet()->setAttributeAndModes( new osg::Point( 7.0 ));
+	geode->addDrawable( geometry );
+	return geode;
 }

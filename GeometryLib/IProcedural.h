@@ -23,9 +23,7 @@ namespace Utility
 {
 	namespace GeometryFactory
 	{
-
 		
-
 		struct ILoftShape
 		{
 			virtual ILoftShape* AddPoint( const osg::Vec3 &point ) = 0;
@@ -49,6 +47,7 @@ namespace Utility
 			virtual osg::Vec3& operator[]( size_t idx ) = 0;
 			virtual void Clear() = 0;
 			virtual osg::Vec3Array * Get() = 0;
+			virtual osg::Vec3Array *GetControlPointsArray() = 0;
 		};
 
 		struct IGeometry2D
@@ -75,10 +74,20 @@ namespace Utility
 			virtual osg::Geode* CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 ) = 0;
 
 			virtual osg::Geode *DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0) ) = 0;
+			virtual osg::Geode *DrawLine( osg::Vec3Array *from, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0), bool showPoints = false ) = 0;
 
-			virtual osg::Geode *CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed ) = 0;
+			virtual osg::Geode *CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed, bool wireframe = false ) = 0;
 		};
 
+		struct IControlPoint
+		{
+			virtual osg::Vec3 GetPosition() = 0;
+			virtual POINT_TYPE &Type() = 0;
+			virtual bool Valid() = 0;
+			virtual float &Radius() = 0;
+			virtual int Index() = 0;
+		};
+		
 		struct ILoft
 		{
 		public:
@@ -98,6 +107,10 @@ namespace Utility
 			// returns a current Shape, nullptr othercase
 			virtual ILoftShape* GetShape() = 0;
 			virtual osg::Group* GetModelGroup() = 0;
+			virtual bool PickPoint( const osg::Vec3& pos, IControlPoint **point ) = 0;
+			virtual bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 ) = 0;
+			virtual bool &EditMode() = 0;
+			
 		};
 
 		struct  IFactory

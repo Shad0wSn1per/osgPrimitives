@@ -41,6 +41,8 @@ namespace Utility
 
 			void TransformPoints( osg::Vec3Array *arr, osg::MatrixTransform *mt );
 
+			
+
 			/*
 			*
 			* slice0    0(1)---1(3)---2(5)---3(7)
@@ -76,8 +78,14 @@ namespace Utility
 			osg::Geode* CreateGeometryQuad( const osg::Vec3d &p0, const osg::Vec3d &p1, const osg::Vec3d &p2, const osg::Vec3d &p3 );
 
 			osg::Geode *DrawLine( const osg::Vec3 &from	,const osg::Vec3 &to, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0) );
+			
+			osg::Geode *DrawLine( osg::Vec3Array *from, const osg::Vec4 &color = osg::Vec4(1.0,1.0,1.0,1.0), bool showPoints = false );
 
-			osg::Geode* CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed );
+			osg::Geode *DrawPoint( const osg::Vec3 &pos, const osg::Vec4 &color = osg::Vec4( 1.0,1.0,1.0,1.0 ) );
+
+			osg::Geode *DrawPoint( osg::Vec3Array *from, const osg::Vec4 &color = osg::Vec4( 1.0,1.0,1.0,1.0 ) );
+
+			osg::Geode* CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *slice1, bool closed, bool wireframe = false );
 		};
 	};
 };

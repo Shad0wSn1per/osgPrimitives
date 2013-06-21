@@ -15,12 +15,13 @@ namespace Utility
 		public:
 			
 
-			typedef class ControlPoint
+			typedef class ControlPoint : public IControlPoint
 			{
 				osg::Vec3 *m_Position;
 				POINT_TYPE m_Type;
 				bool m_bValid;
 				float m_Radius;
+				int m_Index;
 				
 			public:
 				ControlPoint()
@@ -45,15 +46,20 @@ namespace Utility
 				}
 
 				osg::Vec3 *Position(){ return m_Position; }
+				osg::Vec3 GetPosition(){ return *m_Position; }
 
-				bool Vaild(){ return m_bValid; }
+
+				bool Valid(){ return m_bValid; }
 
 				void SetType( POINT_TYPE t ){ m_Type = t;}
 
-				POINT_TYPE Type(){ return m_Type; }
+				POINT_TYPE &Type(){ return m_Type; }
+				float &Radius(){ return m_Radius; }
 
 				void SetCornerRadius( float r ){ m_Radius = r; };
 				float GetCornerRadius() { return m_Radius; }
+				int Index(){ return m_Index; };
+				void Index( int val ){ m_Index = val; }
 
 
 			} CONTROL_POINT;
@@ -72,27 +78,27 @@ namespace Utility
 				Path* AddPoint( const float x, const float y,const float z, POINT_TYPE type , float radius = 1 );
 				Path* InsertPoint( size_t after, const osg::Vec3 &point );
 				Path* InsertPoint( size_t after, const float x, const float y,const float z );
-				/*Path* SetPath( const osg::Vec3Array *path );
-				Path* SetPath( const std::vector< osg::Vec3 > &v );*/
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				osg::Vec3Array *Get();
 				osg::Vec3Array *GetControlPointsArray(){ return m_Anchors.get(); }
+				CONTROL_POINTS  &GetControlPoints(){ return m_ControlPoints; }
 				Path()
 				{
 					m_Path = new osg::Vec3Array;
 					m_Anchors = new osg::Vec3Array;
 				};
+
 				~Path(){};
-			private:
 				void generatePath();
+			private:
+				
 				void createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
+				void reindexPoints( CONTROL_POINTS::iterator from );
 			};
 
 			class Shape : public ILoftShape
 			{
-				//typedef std::vector< osg::Vec3 > SHAPE;
-				//osg::Vec3Array *m_Shape;
 				osg::ref_ptr< osg::Vec3Array > m_Shape;
 				
 				bool m_bCloseShape;
@@ -137,6 +143,7 @@ namespace Utility
 				, m_pShape(0)
 				, m_bClosed( false )
 				, m_ModelGroup( g )
+				, m_bEditMode( false )
 			{
 				assert( g );
 			}
@@ -164,7 +171,9 @@ namespace Utility
 			virtual ILoftShape* GetShape(){ return m_pShape; }
 			virtual osg::Group* GetModelGroup(){ return m_ModelGroup.get(); }
 
-			int PickPoint( const osg::Vec3& pos );
+			bool PickPoint( const osg::Vec3& pos, IControlPoint **point );
+			bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 );
+			bool &EditMode(){ return m_bEditMode;}
 
 		private:
 			
@@ -177,6 +186,7 @@ namespace Utility
 			std::vector< Shape* >m_ShapeObjects;
 			bool m_bClosed;
 			osg::ref_ptr< osg::Group > m_ModelGroup;
+			bool m_bEditMode;
 
 		private:
 			void makeGeometry( osg::Group *parentGroup );

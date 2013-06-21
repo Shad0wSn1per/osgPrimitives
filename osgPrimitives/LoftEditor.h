@@ -51,14 +51,11 @@ namespace Utility
 
 			LoftEditor( ILoft * loft );
 
-			bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 );
-			int Find( const osg::Vec3& p );
-			PATH_POINT &GetPoint( size_t index );
 			osg::Vec3Array *GetVertexArray();
 			void AddPoint( const osg::Vec3 &pos );
 			bool InsertPoint( size_t after, const osg::Vec3 &pos );
 			bool RemovePoint( const osg::Vec3 &pos );
-			osg::Vec3Array * GetPath();
+		
 			std::vector< osg::Vec3 > GetControlPoints();
 			void SetVisible( bool state );
 			bool IsVisible(){ return m_bVisible; }
@@ -66,10 +63,10 @@ namespace Utility
 
 
 		private:
-			PATH_TRAECTORY::iterator GetPoint( const osg::Vec3& p );
+			//PATH_TRAECTORY::iterator GetPoint( const osg::Vec3& p );
 			PATH_TRAECTORY m_Traectory;
 			osg::ref_ptr< osg::Vec3Array > m_VertexArray;
-			void createRoundedCorner( osg::Vec3Array *path, PATH_TRAECTORY::iterator corner );
+			
 			bool m_bVisible;
 			ILoft* m_Loft;
 		};
