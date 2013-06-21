@@ -30,32 +30,10 @@ namespace Utility
 					, m_Radius( 1.0 )
 					//, m_Position( 0 )
 				{}
-
-				//ControlPoint( osg::Vec3 * point)
-				//	: m_Type( PT_CORNER )
-				//	, m_bValid( false )
-				//	, m_Radius( 1.0 )
-				//	//, m_Position( point )
-				//{
-				//}
-				/*void SetPosition( const osg::Vec3& p )
-				{ 
-					m_Position->set( p );
-					if( !m_bValid )
-						m_bValid = true;
-				}*/
-
-				/*osg::Vec3 *Position(){ return m_Position; }
-				osg::Vec3 GetPosition(){ return *m_Position; }*/
-
-
 				bool Valid(){ return m_bValid; }
-
 				void SetType( POINT_TYPE t ){ m_Type = t;}
-
 				POINT_TYPE &Type(){ return m_Type; }
-				float &Radius(){ return m_Radius; }
-
+				float Radius(){ return m_Radius; }
 				void SetCornerRadius( float r ){ m_Radius = r; };
 				float GetCornerRadius() { return m_Radius; }
 				int Index(){ return m_Index; };
@@ -79,6 +57,7 @@ namespace Utility
 				Path* InsertPoint( size_t after, const osg::Vec3 &point );
 				Path* InsertPoint( size_t after, const float x, const float y,const float z );
 				bool RemovePoint( int idx );
+				void SetCornerRadius( IControlPoint *p, float R );
 
 
 				osg::Vec3& operator[]( size_t idx );
@@ -98,6 +77,7 @@ namespace Utility
 				
 				bool createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
 				void reindexPoints( CONTROL_POINTS::iterator from );
+				double calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 );
 			};
 
 			class Shape : public ILoftShape

@@ -74,7 +74,8 @@ Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point, POINT_TYPE type, float
 	AddPoint( point );
 	CONTROL_POINT& cp = m_ControlPoints.back();
 	cp.SetType( type );
-	cp.SetCornerRadius( radius );
+	//cp.SetCornerRadius( radius );
+	SetCornerRadius( &cp, radius );
 	generatePath();
 	return this;
 }
@@ -254,10 +255,16 @@ bool Loft::Realize(  )
 	// Control points
 	// First and next_first for the zero slice shape points
 	// Last and pre_last for the last slice shape points
-	Vec3 first = (*m_pPath)[0];
+	Vec3Array *cpar = m_pPath->GetControlPointsArray();
+
+	/*Vec3 first = (*m_pPath)[0];
 	Vec3 next_first = (*m_pPath)[1];
 	Vec3 last = (*m_pPath)[ num_path_points-1 ];
-	Vec3 pre_last = (*m_pPath)[ num_path_points-2 ];
+	Vec3 pre_last = (*m_pPath)[ num_path_points-2 ];*/
+	Vec3 first = *(cpar->begin());
+	Vec3 next_first = *(cpar->begin()+1);
+	Vec3 last = *(cpar->end()-1);
+	Vec3 pre_last = *(cpar->end()-2);
 
 	
 	ref_ptr< MatrixTransform > mt_first = new MatrixTransform;
@@ -396,4 +403,63 @@ bool Loft::Path::RemovePoint( int idx )
 	m_ControlPoints.erase( m_ControlPoints.begin()+idx );
 	std::for_each( m_ControlPoints.begin()+idx-1, m_ControlPoints.end(), decrementIndex );
 	return true;
+}
+
+void Loft::Path::SetCornerRadius( IControlPoint *p, float R )
+{
+	int idx = p->Index();
+	if( idx == 0 || idx == m_ControlPoints.size()-1 )
+		return;
+	CONTROL_POINT prev_cp = m_ControlPoints.at( idx - 1 );
+	CONTROL_POINT next_cp = m_ControlPoints.at( idx + 1 );
+	Vec3 prev, next;
+	Vec3 current = m_Anchors->at( idx );
+
+	double Rleft = MAXDWORD , Rright = MAXDWORD, Rplain;
+
+	prev = m_Anchors->at( idx-1 );
+	next = m_Anchors->at( idx+1 );
+	Rplain = calcMaxKinkRadius( current-prev, next-current );
+	
+	if( prev_cp.Type() == PT_ROUND )
+	{
+		Rleft = getFreeLength( prev_cp, true );
+	}
+	if( next_cp.Type() == PT_ROUND )
+	{
+		Rleft = getFreeLength( next_cp, false );
+	}
+	dynamic_cast< Loft::ControlPoint*>( p )->SetCornerRadius( min( min( min(Rleft,Rright), Rplain ), R ));
+
+
+
+
+	if( prev_cp.Type() == PT_CORNER && next_cp.Type() == PT_CORNER )
+	{
+		prev = m_Anchors->at( idx-1 );
+		next = m_Anchors->at( idx+1 );
+		double maxR = calcMaxKinkRadius( current-prev, next-current );
+		dynamic_cast< Loft::ControlPoint*>( p )->SetCornerRadius( min( maxR, R ));
+	}
+}
+
+double Loft::Path::calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 )
+{
+	double l0 = v0.length();
+	double l1 = v1.length();
+	double L = min( l0, l1 );
+	double corner_angle = osg::PI - acos( v0*v1/( l0 * l1)) ;
+	return L * tan( corner_angle / 2.0 );
+}
+
+double Loft::Path::getFreeLength( CONTROL_POINT &pt, bool left )
+{
+	int i = pt.Index();
+	CONTROL_POINT prev = m_ControlPoints.at( i-1 );
+	CONTROL_POINT next = m_ControlPoints.at( i+1 );
+	Vec3 p = m_Anchors->at( i-1 );
+	Vec3 n = m_Anchors->at( i+1 );
+	Vec3 c = m_Anchors->at( i );
+	double corner_angle = osg::PI - acos( p*n/( p.length() * n.length())) ;
+	return pt.Radius() / tan( corner_angle/2.0 );
 }

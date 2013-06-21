@@ -186,17 +186,19 @@ osg::Geode* Geometry3D::CreateShape( osg::Vec3Array *slice0, osg::Vec3Array *sli
 	}
 	geom->setVertexArray( strip_points );
 	geom->addPrimitiveSet( new DrawArrays( PrimitiveSet::TRIANGLE_STRIP, 0, strip_points->size() ));
+	osg::ref_ptr<osg::Vec4Array> colours (new osg::Vec4Array()); 
+	geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
+	geom->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
 	if( wireframe )
 	{
-
 		geom->getOrCreateStateSet()->setAttributeAndModes(new osg::PolygonMode(osg::PolygonMode::FRONT_AND_BACK, osg::PolygonMode::LINE));
-		osg::ref_ptr<osg::Vec4Array> colours (new osg::Vec4Array()); 
 		colours->assign( strip_points->size(), Vec4( 0.45,0.48, 0.65,1.0  ) );
-		geom->setColorArray(colours.get());
-		geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX );
-		geom->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::OFF | StateAttribute::PROTECTED );
 	}
-
+	else
+	{
+		colours->assign( strip_points->size(), Vec4( 0.45,0.8, 1.0,1.0  ) );
+	}
+	geom->setColorArray(colours.get());
 	geo->addDrawable( geom );
 	
 	//geo->getOrCreateStateSet()->setMode( GL_LIGHTING, StateAttribute::ON | StateAttribute::OVERRIDE );

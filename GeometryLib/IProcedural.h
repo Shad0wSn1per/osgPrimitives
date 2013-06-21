@@ -23,7 +23,7 @@ namespace Utility
 {
 	namespace GeometryFactory
 	{
-		
+		struct IControlPoint;
 		struct ILoftShape
 		{
 			virtual ILoftShape* AddPoint( const osg::Vec3 &point ) = 0;
@@ -49,6 +49,7 @@ namespace Utility
 			virtual osg::Vec3Array * Get() = 0;
 			virtual osg::Vec3Array *GetControlPointsArray() = 0;
 			virtual bool RemovePoint( int idx ) = 0;
+			virtual void SetCornerRadius( IControlPoint *p, float R ) = 0;
 		};
 
 		struct IGeometry2D
@@ -85,7 +86,7 @@ namespace Utility
 			//virtual osg::Vec3 GetPosition() = 0;
 			virtual POINT_TYPE &Type() = 0;
 			virtual bool Valid() = 0;
-			virtual float &Radius() = 0;
+			virtual float Radius() = 0;
 			virtual int Index() = 0;
 		};
 		

@@ -50,35 +50,19 @@ public:
 						}
 
 						m_pLoft->Realize();
-
 					}
 					
 					break;
 				}
-
 			case '2':
 
 				int count = m_pLoft->GetPath()->GetControlPointsArray()->size();
-				if( count )
+				if( count>1 )
 				{
-					m_pLoft->GetPath()->RemovePoint ( count-1 );
+					m_pLoft->GetPath()->RemovePoint ( count-2 );
 					m_pLoft->Realize();
 				}
-					
-					
 				break;
-
-				/*if( m_pEditor->IsVisible() )
-				{
-					m_pEditor->SetVisible( false );
-					m_pLoft->Realize();
-				}
-				else
-				{
-					m_pEditor->SetVisible( true );
-					_model->removeChild(0, _model->getNumChildren() );
-				}
-				break;*/
 			};
 			break;
 		};
@@ -126,22 +110,24 @@ int _tmain(int argc, _TCHAR* argv[])
 	float pr = radius * 1.3;
 	float rad = sqrt( 2*radius*radius ) - radius;
 	path->AddPoint( Vec3( 35.05,43.83,0 ) );
-	path->AddPoint( Vec3( 163.27,117.75,10 ));
-	path->AddPoint( Vec3( 100,-20.0,-20 ));
-	path->InsertPoint( 2, Vec3( 273.12,0.05,50 ));
+	path->AddPoint( Vec3( 163.27,117.75,0 ));
+	path->AddPoint( Vec3( 100,-20.0,0 ));
+	path->InsertPoint( 2, Vec3( 273.12,0.05,0 ));
 	shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 8 ) )->CloseShape( true );
 	loft->SetPath( path )->SetShape( shape );
 	IControlPoint *cp = 0;
-	if( loft->PickPoint( Vec3( 163.27,117.75,10 ), &cp ))
+	if( loft->PickPoint( Vec3( 163.27,117.75,0 ), &cp ))
 	{
 		cp->Type() = PT_ROUND;
-		cp->Radius() = 60.5;
+		path->SetCornerRadius( cp, 200 );
+		//cp->Radius() = 60.5;
 	}
 
-	if( loft->PickPoint( Vec3( 273.12,0.05,50 ), &cp ))
+	if( loft->PickPoint( Vec3( 273.12,0.05,0 ), &cp ))
 	{
-		cp->Type() = PT_ROUND;
-		cp->Radius() = 30.5;
+		//cp->Type() = PT_ROUND;
+		//path->SetCornerRadius( cp, 345 );
+		//cp->Radius() = 30.5;
 	}
 	loft->Realize();
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
