@@ -48,6 +48,7 @@ namespace Utility
 			virtual void Clear() = 0;
 			virtual osg::Vec3Array * Get() = 0;
 			virtual osg::Vec3Array *GetControlPointsArray() = 0;
+			virtual bool RemovePoint( int idx ) = 0;
 		};
 
 		struct IGeometry2D
@@ -81,7 +82,7 @@ namespace Utility
 
 		struct IControlPoint
 		{
-			virtual osg::Vec3 GetPosition() = 0;
+			//virtual osg::Vec3 GetPosition() = 0;
 			virtual POINT_TYPE &Type() = 0;
 			virtual bool Valid() = 0;
 			virtual float &Radius() = 0;
@@ -109,7 +110,9 @@ namespace Utility
 			virtual osg::Group* GetModelGroup() = 0;
 			virtual bool PickPoint( const osg::Vec3& pos, IControlPoint **point ) = 0;
 			virtual bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 ) = 0;
-			virtual bool &EditMode() = 0;
+			//virtual bool &EditMode() = 0;
+			virtual void SetEditMode( bool editMode ) = 0;
+			virtual bool GetPointPosition( int index, osg::Vec3 &point )=0;
 			
 		};
 

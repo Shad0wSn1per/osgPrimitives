@@ -20,6 +20,16 @@ namespace Utility
 				ptr = nullptr;
 			}
 		}
+
+		void incrementIndex( Loft::CONTROL_POINT &p )
+		{
+			p.Index( p.Index()+1 );
+		}
+
+		void decrementIndex( Loft::CONTROL_POINT &p )
+		{
+			p.Index( p.Index()-1 );
+		}
 	}
 	
 	bool isPoint( const osg::Vec3&point, osg::Vec3& pos )
@@ -33,8 +43,8 @@ Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point )
 	if( point.valid() )
 	{
 		m_Anchors.get()->push_back( point );
-		m_ControlPoints.push_back( CONTROL_POINT( &m_Anchors->back() ));
-		m_ControlPoints.back().Index( m_ControlPoints.size() );
+		m_ControlPoints.push_back( CONTROL_POINT());
+		m_ControlPoints.back().Index( m_ControlPoints.size()-1 );
 		//generatePath();
 	}
 	return this;
@@ -48,10 +58,12 @@ Loft::Path* Loft::Path::AddPoint( const float x, const float y,const float z )
 
 Loft::Path* Loft::Path::InsertPoint( size_t after, const osg::Vec3 &point )
 {
-	if( after > m_Anchors->size()-2 )
+	if( after > m_Anchors->size()-1 )
 		throw std::out_of_range( "Index out of range. Array to small or you try to insert after last element" );
-	m_Anchors->insert( m_Anchors->begin() + after + 1, point );
-	m_ControlPoints.insert( m_ControlPoints.begin() + after + 1,CONTROL_POINT( &m_Anchors->at( after + 1 )));
+	m_Anchors->insert( m_Anchors->begin() + after, point );
+	CONTROL_POINT cp;
+	cp.Index( after );
+	m_ControlPoints.insert( m_ControlPoints.begin() + after ,cp);
 	reindexPoints( m_ControlPoints.begin() + after );
 	generatePath();
 	return this;
@@ -87,19 +99,21 @@ void Loft::Path::Clear(){ m_Path->clear(); }
 void Loft::Path::generatePath()
 {
 	m_Path->clear();
-	Vec3Array::iterator itr = m_Anchors->begin();
-	Vec3Array::iterator itr_e = m_Anchors->end();
+	
+	CONTROL_POINTS::iterator itr = m_ControlPoints.begin();
+	CONTROL_POINTS::iterator itr_e = m_ControlPoints.end();
 	int index = 0;
 	while( itr != itr_e )
 	{
-		CONTROL_POINT cp = m_ControlPoints.at( index );
-		switch( cp.Type() )
+		//CONTROL_POINT cp = m_ControlPoints.at( index );
+		switch( itr->Type() )
 		{
 		case PT_ROUND:
-			createRoundedCorner( m_Path, index );
+			if( !createRoundedCorner( m_Path, index ) )
+				m_Path->push_back(  m_Anchors->at( itr->Index() ) );
 			break;
 		case PT_CORNER: default:
-			m_Path->push_back( *itr );
+			m_Path->push_back( m_Anchors->at( itr->Index() ) );
 			break;
 		};
 		++index;
@@ -122,13 +136,16 @@ bool Loft::PickPoint( const osg::Vec3& pos, IControlPoint **point )
 		return false;
 }
 
-void Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
+bool Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
 {
 	if( corner_index == 0 || corner_index == m_ControlPoints.size()-1 )
-		return;
+		return false;
 	CONTROL_POINT &current = m_ControlPoints.at( corner_index );
 	CONTROL_POINT &prev = m_ControlPoints.at( corner_index -1 );
 	CONTROL_POINT &next = m_ControlPoints.at( corner_index + 1 );
+
+	/*if( prev.Type() == PT_ROUND || next.Type() == PT_ROUND )
+		return false;*/
 
 	/*Vec3 currPos = *current.Position();
 	Vec3 prevPos = *prev.Position();
@@ -163,10 +180,12 @@ void Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
 	double angle_step = kink_angle / 16.0 ;
 	for( double i = 0; i < kink_angle ; i += angle_step )
 	{
+		
 		Matrixd rm = Matrixd::rotate( -angle_step, ABC_norm );
 		OH = Matrixd::transform3x3( rm, OH );
 		arr->push_back( WO + OH );
 	}
+	return true;
 }
 
 
@@ -334,9 +353,11 @@ Loft::~Loft()
 
 void Loft::Path::reindexPoints( CONTROL_POINTS::iterator from )
 {
-	int start_idx = from - m_ControlPoints.begin();
+	std::for_each( from+1, m_ControlPoints.end(), incrementIndex );
+	_asm nop;
+	/*int start_idx = from - m_ControlPoints.begin();
 	for( ; from != m_ControlPoints.end(); ++from )
-		from->Index( start_idx++ );
+		from->Index( start_idx++ );*/
 }
 
 bool Loft::IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 )
@@ -348,3 +369,31 @@ bool Loft::IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 )
 	return false;
 }
 
+void Loft::SetEditMode( bool editMode )
+{
+	EditMode() = editMode;
+	Realize();
+}
+
+bool Loft::GetPointPosition( int index, osg::Vec3 &point )
+{
+	if( m_pPath )
+	{
+		Vec3Array *ar = m_pPath->GetControlPointsArray();
+		if( index >= ar->size() )
+			return false;
+		point = ar->at( index );
+		return true;
+	}
+	return false;
+}
+
+bool Loft::Path::RemovePoint( int idx )
+{
+	if( idx >= m_Anchors->size() )
+		return false;
+	m_Anchors->erase( m_Anchors->begin() + idx );
+	m_ControlPoints.erase( m_ControlPoints.begin()+idx );
+	std::for_each( m_ControlPoints.begin()+idx-1, m_ControlPoints.end(), decrementIndex );
+	return true;
+}

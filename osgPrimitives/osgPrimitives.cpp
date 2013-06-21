@@ -13,12 +13,10 @@ using namespace Utility::GeometryFactory;
 class EditorHandler :public osgGA::GUIEventHandler
 {
 public:
-	EditorHandler( osg::Group* object, LoftEditor* editor, ILoft *loftModel ) 
-		: _model(object) 
-		, m_pEditor( editor )
-		, m_pLoft( loftModel )
+	EditorHandler(  ILoft *loftModel ) 
+		: m_pLoft( loftModel )
 	{
-		assert( object || editor );
+		assert( loftModel );
 	} 
 	virtual bool handle( const osgGA::GUIEventAdapter& ea,
 		osgGA::GUIActionAdapter& aa )
@@ -28,9 +26,49 @@ public:
 		case osgGA::GUIEventAdapter::KEYDOWN:
 			switch ( ea.getKey() )
 			{
-			case 'q': case 'Q':
+			case '[': 
+				m_pLoft->SetEditMode( true );
+				break;
+			case ']':
+				m_pLoft->SetEditMode( false);
+				break;
+			case '1':
+				{
+					int count = m_pLoft->GetPath()->GetControlPointsArray()->size();
+					int idx = (int)std::rand() % count;
+					Vec3 prev, next;
+					if( m_pLoft->GetPointPosition( idx-1, prev ) && m_pLoft->GetPointPosition( idx+1, next ) )
+					{
+						Vec3 in = ( next - prev ) / 2.0;
+						double z = ( 50 - rand()%100 );
+						in.z() = z;
+						m_pLoft->GetPath()->InsertPoint( idx, in );
+						IControlPoint *cp = 0;
+						if( m_pLoft->PickPoint( in, &cp ) )
+						{
+							cp->Type() = (POINT_TYPE)( rand()%1 );
+						}
 
-				if( m_pEditor->IsVisible() )
+						m_pLoft->Realize();
+
+					}
+					
+					break;
+				}
+
+			case '2':
+
+				int count = m_pLoft->GetPath()->GetControlPointsArray()->size();
+				if( count )
+				{
+					m_pLoft->GetPath()->RemovePoint ( count-1 );
+					m_pLoft->Realize();
+				}
+					
+					
+				break;
+
+				/*if( m_pEditor->IsVisible() )
 				{
 					m_pEditor->SetVisible( false );
 					m_pLoft->Realize();
@@ -40,14 +78,13 @@ public:
 					m_pEditor->SetVisible( true );
 					_model->removeChild(0, _model->getNumChildren() );
 				}
-				break;
+				break;*/
 			};
 			break;
 		};
+		return false;
 	}
 protected:
-	osg::ref_ptr<osg::Group> _model;
-	Utility::GeometryFactory::LoftEditor* m_pEditor;
 	ILoft *m_pLoft;
 
 };
@@ -90,8 +127,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	float rad = sqrt( 2*radius*radius ) - radius;
 	path->AddPoint( Vec3( 35.05,43.83,0 ) );
 	path->AddPoint( Vec3( 163.27,117.75,10 ));
-	path->AddPoint( Vec3( 273.12,0.05,50 ));
 	path->AddPoint( Vec3( 100,-20.0,-20 ));
+	path->InsertPoint( 2, Vec3( 273.12,0.05,50 ));
 	shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 8 ) )->CloseShape( true );
 	loft->SetPath( path )->SetShape( shape );
 	IControlPoint *cp = 0;
@@ -99,7 +136,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		cp->Type() = PT_ROUND;
 		cp->Radius() = 60.5;
-		loft->EditMode() = true;
 	}
 
 	if( loft->PickPoint( Vec3( 273.12,0.05,50 ), &cp ))
@@ -111,6 +147,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,200,0 ), Vec4( 1,0,0,1)));
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,200 ), Vec4( 0,0,1,1)));
+	osg::ref_ptr< EditorHandler > ehandler = new EditorHandler( loft );
+	viewer.addEventHandler( ehandler );
 	//root->addChild( factory->Geometry3D()->DrawLine( loft->GetPath()->GetControlPointsArray(), Vec4( 1.0,1.0,0.0,0.0 )));
 	//	root->addChild( cyl_grp );
 	//}

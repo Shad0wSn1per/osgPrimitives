@@ -17,7 +17,7 @@ namespace Utility
 
 			typedef class ControlPoint : public IControlPoint
 			{
-				osg::Vec3 *m_Position;
+				//osg::Vec3 *m_Position;
 				POINT_TYPE m_Type;
 				bool m_bValid;
 				float m_Radius;
@@ -28,25 +28,25 @@ namespace Utility
 					: m_Type( PT_CORNER )
 					, m_bValid( false )
 					, m_Radius( 1.0 )
-					, m_Position( 0 )
+					//, m_Position( 0 )
 				{}
 
-				ControlPoint( osg::Vec3 * point)
-					: m_Type( PT_CORNER )
-					, m_bValid( false )
-					, m_Radius( 1.0 )
-					, m_Position( point )
-				{
-				}
-				void SetPosition( const osg::Vec3& p )
+				//ControlPoint( osg::Vec3 * point)
+				//	: m_Type( PT_CORNER )
+				//	, m_bValid( false )
+				//	, m_Radius( 1.0 )
+				//	//, m_Position( point )
+				//{
+				//}
+				/*void SetPosition( const osg::Vec3& p )
 				{ 
 					m_Position->set( p );
 					if( !m_bValid )
 						m_bValid = true;
-				}
+				}*/
 
-				osg::Vec3 *Position(){ return m_Position; }
-				osg::Vec3 GetPosition(){ return *m_Position; }
+				/*osg::Vec3 *Position(){ return m_Position; }
+				osg::Vec3 GetPosition(){ return *m_Position; }*/
 
 
 				bool Valid(){ return m_bValid; }
@@ -78,6 +78,9 @@ namespace Utility
 				Path* AddPoint( const float x, const float y,const float z, POINT_TYPE type , float radius = 1 );
 				Path* InsertPoint( size_t after, const osg::Vec3 &point );
 				Path* InsertPoint( size_t after, const float x, const float y,const float z );
+				bool RemovePoint( int idx );
+
+
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				osg::Vec3Array *Get();
@@ -93,7 +96,7 @@ namespace Utility
 				void generatePath();
 			private:
 				
-				void createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
+				bool createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
 				void reindexPoints( CONTROL_POINTS::iterator from );
 			};
 
@@ -172,8 +175,10 @@ namespace Utility
 			virtual osg::Group* GetModelGroup(){ return m_ModelGroup.get(); }
 
 			bool PickPoint( const osg::Vec3& pos, IControlPoint **point );
+			bool GetPointPosition( int index, osg::Vec3 &point );
 			bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 );
 			bool &EditMode(){ return m_bEditMode;}
+			void SetEditMode( bool editMode );
 
 		private:
 			
