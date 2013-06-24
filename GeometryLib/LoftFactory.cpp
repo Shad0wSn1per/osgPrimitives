@@ -408,7 +408,7 @@ void Loft::SetEditMode( bool editMode )
 	Realize();
 }
 
-bool Loft::GetPointPosition( int index, osg::Vec3 &point )
+bool Loft::GetPointPosition( size_t index, osg::Vec3 &point )
 {
 	if( m_pPath )
 	{
@@ -421,7 +421,7 @@ bool Loft::GetPointPosition( int index, osg::Vec3 &point )
 	return false;
 }
 
-bool Loft::Path::RemovePoint( int idx )
+bool Loft::Path::RemovePoint( size_t idx )
 {
 	if( idx >= m_Anchors->size() )
 		return false;
@@ -441,7 +441,7 @@ void Loft::Path::SetCornerRadius( IControlPoint *p, float R )
 	Vec3 prev, next;
 	Vec3 current = m_Anchors->at( idx );
 
-	double Rleft = MAXDWORD , Rright = MAXDWORD, Rplain;
+	double Rleft = MAXDWORD , Rright = MAXDWORD;
 
 	prev = m_Anchors->at( idx-1 );
 	next = m_Anchors->at( idx+1 );
@@ -481,4 +481,18 @@ double Loft::Path::getMaxAvaliableRadius(  osg::Vec3 left, const double &freeLef
 	double L = min( freeLeft, freeRight );
 	double corner_angle = osg::PI - acos( left * right ) ;
 	return L * tan( corner_angle / 2.0 );
+}
+
+bool Loft::SetCornerPosition( size_t cornerIndex, const osg::Vec3 &newPos )
+{
+	if( m_pPath )
+	{
+		Vec3Array *arr = m_pPath->GetControlPointsArray();
+		if( cornerIndex >= arr->size() )
+			return false;
+		(*arr)[ cornerIndex ].set( newPos );
+		m_pPath->setDirty();
+		return true;
+	}
+	return false;
 }

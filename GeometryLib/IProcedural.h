@@ -48,7 +48,7 @@ namespace Utility
 			virtual void Clear() = 0;
 			virtual osg::Vec3Array * Get() = 0;
 			virtual osg::Vec3Array *GetControlPointsArray() = 0;
-			virtual bool RemovePoint( int idx ) = 0;
+			virtual bool RemovePoint( size_t idx ) = 0;
 			virtual void SetCornerRadius( IControlPoint *p, float R ) = 0;
 		};
 
@@ -113,7 +113,8 @@ namespace Utility
 			virtual bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 ) = 0;
 			//virtual bool &EditMode() = 0;
 			virtual void SetEditMode( bool editMode ) = 0;
-			virtual bool GetPointPosition( int index, osg::Vec3 &point )=0;
+			virtual bool GetPointPosition( size_t index, osg::Vec3 &point )=0;
+			virtual bool SetCornerPosition( size_t cornerIndex, const osg::Vec3 &newPos ) = 0;
 			
 		};
 

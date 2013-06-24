@@ -7,47 +7,9 @@ namespace Utility
 {
 	namespace GeometryFactory
 	{
-		
-
 		class LoftEditor
 		{
 		public:
-
-			typedef class PathPoint
-			{
-				osg::Vec3 m_Position;
-				POINT_TYPE m_Type;
-				bool m_bValid;
-				float m_Radius;
-				
-			public:
-				PathPoint()
-					: m_Type( PT_CORNER )
-					, m_bValid( false )
-					, m_Radius( 1.0 )
-				{}
-
-				void SetPosition( const osg::Vec3& p )
-				{ 
-					m_Position = p;
-					if( !m_bValid )
-						m_bValid = true;
-				}
-
-				osg::Vec3 GetPosition(){ return m_Position; }
-
-				bool Vaild(){ return m_bValid; }
-
-				void SetType( POINT_TYPE t ){ m_Type = t;}
-
-				POINT_TYPE Type(){ return m_Type; }
-
-				void SetCornerRadius( float r ){ m_Radius = r; };
-				float GetCornerRadius() { return m_Radius; }
-
-
-			} PATH_POINT;
-			typedef std::vector < PATH_POINT > PATH_TRAECTORY;
 
 			LoftEditor( ILoft * loft );
 
@@ -55,18 +17,10 @@ namespace Utility
 			void AddPoint( const osg::Vec3 &pos );
 			bool InsertPoint( size_t after, const osg::Vec3 &pos );
 			bool RemovePoint( const osg::Vec3 &pos );
-		
-			std::vector< osg::Vec3 > GetControlPoints();
 			void SetVisible( bool state );
 			bool IsVisible(){ return m_bVisible; }
-			//osg::Group * GetModel(){ return m_Base.get(); }
-
-
 		private:
-			//PATH_TRAECTORY::iterator GetPoint( const osg::Vec3& p );
-			PATH_TRAECTORY m_Traectory;
 			osg::ref_ptr< osg::Vec3Array > m_VertexArray;
-			
 			bool m_bVisible;
 			ILoft* m_Loft;
 		};

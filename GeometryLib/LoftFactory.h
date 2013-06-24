@@ -56,13 +56,14 @@ namespace Utility
 				Path* AddPoint( const float x, const float y,const float z, POINT_TYPE type , float radius = 1 );
 				Path* InsertPoint( size_t after, const osg::Vec3 &point );
 				Path* InsertPoint( size_t after, const float x, const float y,const float z );
-				bool RemovePoint( int idx );
+				bool RemovePoint( size_t idx );
 				void SetCornerRadius( IControlPoint *p, float R );
 				osg::Vec3& operator[]( size_t idx );
 				void Clear();
 				osg::Vec3Array *Get();
 				osg::Vec3Array *GetControlPointsArray(){ return m_Anchors.get(); }
 				CONTROL_POINTS  &GetControlPoints(){ return m_ControlPoints; }
+				void setDirty(){ _dirty = true; }
 				Path()
 					: _dirty( true )
 				{
@@ -157,7 +158,8 @@ namespace Utility
 			virtual osg::Group* GetModelGroup(){ return m_ModelGroup.get(); }
 
 			bool PickPoint( const osg::Vec3& pos, IControlPoint **point );
-			bool GetPointPosition( int index, osg::Vec3 &point );
+			bool GetPointPosition( size_t index, osg::Vec3 &point );
+			bool SetCornerPosition( size_t cornerIndex, const osg::Vec3 &newPos );
 			bool IsValidSegment( const osg::Vec3& p0, const osg::Vec3& p1 );
 			bool &EditMode(){ return m_bEditMode;}
 			void SetEditMode( bool editMode );
