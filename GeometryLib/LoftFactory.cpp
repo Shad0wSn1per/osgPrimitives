@@ -10,6 +10,7 @@ namespace Utility
 {
 	namespace GeometryFactory
 	{
+#define RADIUS_SLICE_DEGREE_STEP 4.0
 
 		template< class T >
 		void deleteUsedObject ( T ptr )
@@ -45,6 +46,7 @@ Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point )
 		m_Anchors.get()->push_back( point );
 		m_ControlPoints.push_back( CONTROL_POINT());
 		m_ControlPoints.back().Index( m_ControlPoints.size()-1 );
+		_dirty = true;
 		//generatePath();
 	}
 	return this;
@@ -65,7 +67,8 @@ Loft::Path* Loft::Path::InsertPoint( size_t after, const osg::Vec3 &point )
 	cp.Index( after );
 	m_ControlPoints.insert( m_ControlPoints.begin() + after ,cp);
 	reindexPoints( m_ControlPoints.begin() + after );
-	generatePath();
+	_dirty = true;
+	//generatePath();
 	return this;
 }
 
@@ -76,14 +79,16 @@ Loft::Path* Loft::Path::AddPoint( const osg::Vec3 &point, POINT_TYPE type, float
 	cp.SetType( type );
 	//cp.SetCornerRadius( radius );
 	SetCornerRadius( &cp, radius );
-	generatePath();
+	_dirty = true;
+	//generatePath();
 	return this;
 }
 
 Loft::Path* Loft::Path::AddPoint( const float x, const float y,const float z, POINT_TYPE type, float radius )
 {
 	AddPoint( osg::Vec3( x,y,z ), type, radius );
-	generatePath();
+	_dirty = true;
+	//generatePath();
 	return this;
 }
 
@@ -99,26 +104,30 @@ void Loft::Path::Clear(){ m_Path->clear(); }
 
 void Loft::Path::generatePath()
 {
-	m_Path->clear();
-	
-	CONTROL_POINTS::iterator itr = m_ControlPoints.begin();
-	CONTROL_POINTS::iterator itr_e = m_ControlPoints.end();
-	int index = 0;
-	while( itr != itr_e )
+	if( _dirty )
 	{
-		//CONTROL_POINT cp = m_ControlPoints.at( index );
-		switch( itr->Type() )
+		m_Path->clear();
+
+		CONTROL_POINTS::iterator itr = m_ControlPoints.begin();
+		CONTROL_POINTS::iterator itr_e = m_ControlPoints.end();
+		int index = 0;
+		while( itr != itr_e )
 		{
-		case PT_ROUND:
-			if( !createRoundedCorner( m_Path, index ) )
-				m_Path->push_back(  m_Anchors->at( itr->Index() ) );
-			break;
-		case PT_CORNER: default:
-			m_Path->push_back( m_Anchors->at( itr->Index() ) );
-			break;
-		};
-		++index;
-		++itr;
+			//CONTROL_POINT cp = m_ControlPoints.at( index );
+			switch( itr->Type() )
+			{
+			case PT_ROUND:
+				if( !createRoundedCorner( m_Path, index ) )
+					m_Path->push_back(  m_Anchors->at( itr->Index() ) );
+				break;
+			case PT_CORNER: default:
+				m_Path->push_back( m_Anchors->at( itr->Index() ) );
+				break;
+			};
+			++index;
+			++itr;
+		}
+		_dirty = false;
 	}
 }
 
@@ -179,13 +188,30 @@ bool Loft::Path::createRoundedCorner( osg::Vec3Array *arr, size_t corner_index )
 	Vec3 OH_ = final - WO;
 	double kink_angle = acos( OH*OH_/( R * R )) ;
 	double angle_step = kink_angle / 16.0 ;
-	for( double i = 0; i < kink_angle ; i += angle_step )
+	double radial_shift = osg::DegreesToRadians( RADIUS_SLICE_DEGREE_STEP );
+	double steps = kink_angle / radial_shift;
+
+	for( int  i = 0; i < (int)steps; i++ )
+	{
+		Matrixd rm = Matrixd::rotate( -radial_shift, ABC_norm );
+		OH = Matrixd::transform3x3( rm, OH );
+		arr->push_back( WO + OH );
+	}
+	if( (int)steps != steps ) // 
+	{
+		double lastDelta = (int)steps*radial_shift - kink_angle;
+		Matrixd rm = Matrixd::rotate( lastDelta , ABC_norm );
+		OH = Matrixd::transform3x3( rm, OH );
+		arr->push_back( WO + OH );
+	}
+
+	/*for( double i = 0; i < kink_angle ; i += angle_step )
 	{
 		
 		Matrixd rm = Matrixd::rotate( -angle_step, ABC_norm );
 		OH = Matrixd::transform3x3( rm, OH );
 		arr->push_back( WO + OH );
-	}
+	}*/
 	return true;
 }
 
@@ -257,36 +283,36 @@ bool Loft::Realize(  )
 	// Last and pre_last for the last slice shape points
 	Vec3Array *cpar = m_pPath->GetControlPointsArray();
 
-	/*Vec3 first = (*m_pPath)[0];
+	Vec3 first = (*m_pPath)[0];
 	Vec3 next_first = (*m_pPath)[1];
 	Vec3 last = (*m_pPath)[ num_path_points-1 ];
-	Vec3 pre_last = (*m_pPath)[ num_path_points-2 ];*/
-	Vec3 first = *(cpar->begin());
-	Vec3 next_first = *(cpar->begin()+1);
-	Vec3 last = *(cpar->end()-1);
-	Vec3 pre_last = *(cpar->end()-2);
-
+	Vec3 pre_last = (*m_pPath)[ num_path_points-2 ];
 	
-	ref_ptr< MatrixTransform > mt_first = new MatrixTransform;
-	Matrixd all_translate = Matrixd::translate( first );
-	mt_first->setMatrix( Matrixd::rotate( m_pShape->GetDirection(), next_first - first ) * all_translate );
+	//Vec3 first = *(cpar->begin()); //Первая точка пути
+	//Vec3 next_first = *(cpar->begin()+1); // Вторая точка пути
+	//Vec3 last = *(cpar->end()-1); // Последняя точка
+	//Vec3 pre_last = *(cpar->end()-2); // Предпоследняя точка
 
-	
+	// Если путь состоит из 2х точек, то first == pre_last, next_first == last
+
 	m_ShapeSlices.clear();
+	ref_ptr< MatrixTransform > mt_first = new MatrixTransform;
+	Matrixd all_translate = Matrixd::translate( first ); // Накапливаемые смещения сечения
+	mt_first->setMatrix( Matrixd::rotate( m_pShape->GetDirection(), next_first - first ) * all_translate );
 	ref_ptr< Vec3Array> ar = static_cast< Vec3Array*>( m_pShape->Get()->clone( CopyOp::DEEP_COPY_ARRAYS ));
 	m_ShapeSlices.push_back( ar );
 	Geometry2D::Get().TransformPoints( m_ShapeSlices[0].get(), mt_first );
 
 	if( num_path_points > 2 ) // More then two points - complex path
 	{
-		for( int i = 1; i < num_path_points-1 ; ++i )
+		for( int i = 1; i < num_path_points-1 ; ++i ) // Проходим по всем точкам, кроме последней
 		{
-			Vec3 i_minus_1 = (*m_pPath)[i-1];
-			Vec3 i_plus_1 = (*m_pPath)[i+1];
-			Vec3 i_curr = (*m_pPath)[i];
-			Vec3 dir0 = i_curr- i_minus_1;
+			Vec3 i_minus_1 = (*m_pPath)[i-1]; // Предыдущая точка
+			Vec3 i_plus_1 = (*m_pPath)[i+1]; // Следущая точка
+			Vec3 i_curr = (*m_pPath)[i]; // Текущая точка
+			Vec3 dir0 = i_curr- i_minus_1; 
 			Vec3 dir1 = -i_curr + i_plus_1;
-			Vec3 direction = dir0 + dir1;
+			Vec3 direction = dir0 + dir1; // биссектриса dir0 и dir1
 			m_ShapeSlices.push_back( static_cast< Vec3Array*>( m_pShape->Get()->clone( CopyOp::DEEP_COPY_ARRAYS )));
 			ref_ptr< MatrixTransform > mt = new MatrixTransform;
 			all_translate = all_translate*Matrixd::translate( dir0 );
@@ -419,37 +445,19 @@ void Loft::Path::SetCornerRadius( IControlPoint *p, float R )
 
 	prev = m_Anchors->at( idx-1 );
 	next = m_Anchors->at( idx+1 );
-	Rplain = calcMaxKinkRadius( current-prev, next-current );
 	
 	if( prev_cp.Type() == PT_ROUND )
-	{
 		Rleft = getFreeLength( prev_cp, true );
-	}
+	else
+		Rleft = (current - prev).length();
+	
 	if( next_cp.Type() == PT_ROUND )
-	{
-		Rleft = getFreeLength( next_cp, false );
-	}
-	dynamic_cast< Loft::ControlPoint*>( p )->SetCornerRadius( min( min( min(Rleft,Rright), Rplain ), R ));
+		Rright = getFreeLength( next_cp, false );
+	else
+		Rright = (next - current ).length();
 
-
-
-
-	if( prev_cp.Type() == PT_CORNER && next_cp.Type() == PT_CORNER )
-	{
-		prev = m_Anchors->at( idx-1 );
-		next = m_Anchors->at( idx+1 );
-		double maxR = calcMaxKinkRadius( current-prev, next-current );
-		dynamic_cast< Loft::ControlPoint*>( p )->SetCornerRadius( min( maxR, R ));
-	}
-}
-
-double Loft::Path::calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 )
-{
-	double l0 = v0.length();
-	double l1 = v1.length();
-	double L = min( l0, l1 );
-	double corner_angle = osg::PI - acos( v0*v1/( l0 * l1)) ;
-	return L * tan( corner_angle / 2.0 );
+	double maxR = 0.9*getMaxAvaliableRadius( current-prev, Rleft, next-current, Rright );
+	dynamic_cast< Loft::ControlPoint*>( p )->SetCornerRadius( min( maxR , R ));
 }
 
 double Loft::Path::getFreeLength( CONTROL_POINT &pt, bool prevPoint )
@@ -463,5 +471,14 @@ double Loft::Path::getFreeLength( CONTROL_POINT &pt, bool prevPoint )
 	
 	double corner_angle = osg::PI - acos( p*n/( p.length() * n.length())) ;
 	double HB = pt.Radius() / tan( corner_angle/2.0 );
-	return prevPoint ? p.length() - HB : HB
+	return prevPoint ? n.length() - HB : HB;
+}
+
+double Loft::Path::getMaxAvaliableRadius(  osg::Vec3 left, const double &freeLeft,  osg::Vec3 right, const double &freeRight )
+{
+	left.normalize();
+	right.normalize();
+	double L = min( freeLeft, freeRight );
+	double corner_angle = osg::PI - acos( left * right ) ;
+	return L * tan( corner_angle / 2.0 );
 }

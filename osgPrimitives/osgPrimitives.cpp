@@ -111,7 +111,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	float rad = sqrt( 2*radius*radius ) - radius;
 	path->AddPoint( Vec3( 35.05,43.83,0 ) );
 	path->AddPoint( Vec3( 163.27,117.75,0 ));
-	path->AddPoint( Vec3( 100,-20.0,0 ));
+	path->AddPoint( Vec3( 100,-20.0,70 ));
 	path->InsertPoint( 2, Vec3( 273.12,0.05,0 ));
 	shape->SetShape( factory->Geometry2D()->GetCircleShapePoints( radius, PIVOT_PLANE_YZ, 8 ) )->CloseShape( true );
 	loft->SetPath( path )->SetShape( shape );
@@ -119,27 +119,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	if( loft->PickPoint( Vec3( 163.27,117.75,0 ), &cp ))
 	{
 		cp->Type() = PT_ROUND;
-		path->SetCornerRadius( cp, 200 );
+		path->SetCornerRadius( cp, 120.5 );
 		//cp->Radius() = 60.5;
 	}
 
 	if( loft->PickPoint( Vec3( 273.12,0.05,0 ), &cp ))
 	{
-		//cp->Type() = PT_ROUND;
-		//path->SetCornerRadius( cp, 345 );
+		cp->Type() = PT_ROUND;
+		path->SetCornerRadius( cp, 30 );
 		//cp->Radius() = 30.5;
 	}
+	//path->AddPoint( Vec3());
 	loft->Realize();
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 200,0,0 ), Vec4( 0,1,0,1)));
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,200,0 ), Vec4( 1,0,0,1)));
 	root->addChild( factory->Geometry3D()->DrawLine( Vec3(), Vec3( 0,0,200 ), Vec4( 0,0,1,1)));
 	osg::ref_ptr< EditorHandler > ehandler = new EditorHandler( loft );
 	viewer.addEventHandler( ehandler );
-	//root->addChild( factory->Geometry3D()->DrawLine( loft->GetPath()->GetControlPointsArray(), Vec4( 1.0,1.0,0.0,0.0 )));
-	//	root->addChild( cyl_grp );
-	//}
-	/*cyl_grp->getOrCreateStateSet()->setTextureAttributeAndModes(
-	0, new Texture2D( osgDB::readImageFile( "Dirt.jpg" )), StateAttribute::ON );*/
 	viewer.setSceneData( root.get() );
 	viewer.run();
 	freeInterface( factory );

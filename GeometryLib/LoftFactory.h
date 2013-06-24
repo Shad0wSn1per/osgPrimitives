@@ -64,6 +64,7 @@ namespace Utility
 				osg::Vec3Array *GetControlPointsArray(){ return m_Anchors.get(); }
 				CONTROL_POINTS  &GetControlPoints(){ return m_ControlPoints; }
 				Path()
+					: _dirty( true )
 				{
 					m_Path = new osg::Vec3Array;
 					m_Anchors = new osg::Vec3Array;
@@ -74,10 +75,11 @@ namespace Utility
 
 			private:
 				
+				bool _dirty;
 				bool createRoundedCorner( osg::Vec3Array *arr, size_t corner_index );
 				void reindexPoints( CONTROL_POINTS::iterator from );
-				double calcMaxKinkRadius( const osg::Vec3 &v0, const osg::Vec3 &v1 );
 				double getFreeLength( CONTROL_POINT &pt, bool prevPoint );
+				double getMaxAvaliableRadius(  osg::Vec3 left, const double &freeLeft,  osg::Vec3 right, const double &freeRight );
 			};
 
 			class Shape : public ILoftShape
